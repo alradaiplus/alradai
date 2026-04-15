@@ -1,0 +1,194 @@
+{
+  "meta": {
+    "title": "PYB3DCP — Print Your Building | Yemen's first 3D concrete printing company",
+    "description": "PYB3DCP is Yemen's first company specialized in 3D concrete printing. We turn ideas into tangible projects with advanced technology, custom design, and rapid delivery."
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "projects": "Projects",
+    "contact": "Contact",
+    "cta": "Get started",
+    "language": "عربي"
+  },
+  "hero": {
+    "eyebrow": "PYB3DCP · Print your building",
+    "headline": "Turning ideas into tangible projects",
+    "subtitle": "Yemen's first company specialized in smart construction and 3D concrete printing.",
+    "primaryCta": "Get started",
+    "secondaryCta": "Explore our services",
+    "scroll": "Scroll"
+  },
+  "stats": {
+    "title": "Numbers that reflect your trust",
+    "subtitle": "We build the future with real numbers — and tangible projects.",
+    "items": [
+      { "value": 92, "suffix": "%", "label": "Client satisfaction" },
+      { "value": 25, "prefix": "+", "label": "Projects delivered" },
+      { "value": 12, "prefix": "+", "label": "Long-term clients" },
+      { "value": 5, "prefix": "+", "label": "Years of experience" }
+    ]
+  },
+  "about": {
+    "eyebrow": "Who we are",
+    "title": "Yemen's first smart construction specialist",
+    "intro": "PYB3DCP is a pioneer in 3D concrete printing in Yemen. We deliver innovative, sustainable solutions for the construction sector, turning creative ideas into tangible projects — at high quality, in record time.",
+    "mission": {
+      "title": "Our mission",
+      "body": "Empower Yemen's construction sector through advanced 3D printing technology and deliver smart, sustainable building solutions that meet our clients' needs with excellence and efficiency."
+    },
+    "vision": {
+      "title": "Our vision",
+      "body": "To become the leading 3D concrete printing company in Yemen and the region, and to contribute to a better future through smart, sustainable construction."
+    },
+    "values": {
+      "title": "Our core values",
+      "items": [
+        { "title": "Innovation", "body": "Always pursuing innovative solutions in step with the latest global technologies." },
+        { "title": "Quality", "body": "Uncompromising quality standards across every phase of execution." },
+        { "title": "Sustainability", "body": "We believe in sustainable construction and reducing environmental impact." },
+        { "title": "Professionalism", "body": "A specialist team of engineers and experts at your service." }
+      ]
+    },
+    "timelineTitle": "PYB's journey since day one"
+  },
+  "whyUs": {
+    "eyebrow": "Why us",
+    "title": "What sets PYB3DCP apart?",
+    "items": [
+      {
+        "title": "Advanced technology",
+        "body": "We use globally certified 3D printing technologies to deliver the highest precision and quality on every project."
+      },
+      {
+        "title": "Custom design",
+        "body": "Unique designs tailored to each project — fully customizable to match your vision and goals."
+      },
+      {
+        "title": "Fast delivery",
+        "body": "We commit to tight, realistic timelines — saving time and cost compared to traditional construction."
+      }
+    ]
+  },
+  "services": {
+    "eyebrow": "Our services",
+    "title": "Integrated smart construction",
+    "subtitle": "From idea to handover, we deliver end-to-end services that cover every angle of your project.",
+    "items": [
+      {
+        "id": "01",
+        "title": "3D concrete printing",
+        "body": "State-of-the-art 3D concrete printing services, capable of executing complex designs impossible with traditional methods — at top quality in less time."
+      },
+      {
+        "id": "02",
+        "title": "Custom project design",
+        "body": "A team of specialist engineers and architects designs your project around your needs and vision — balancing aesthetics and function."
+      },
+      {
+        "id": "03",
+        "title": "Specialist engineering consulting",
+        "body": "Expert consultancy in smart construction and 3D printing to help you make the right calls on your project."
+      },
+      {
+        "id": "04",
+        "title": "Maintenance & restoration",
+        "body": "Maintenance and restoration services powered by 3D printing — extending the life of structures and improving their performance."
+      }
+    ]
+  },
+  "projects": {
+    "eyebrow": "Our work",
+    "title": "Projects that speak for themselves",
+    "subtitle": "Drag horizontally to browse selected work.",
+    "comingSoon": "Coming soon",
+    "items": [
+      { "title": "Elite Villa", "location": "Sana'a", "category": "Residential" },
+      { "title": "Innovation Hub", "location": "Aden", "category": "Commercial" },
+      { "title": "Expo Pavilion", "location": "Mukalla", "category": "Events" },
+      { "title": "Al-Anwar Mosque", "location": "Taiz", "category": "Religious" },
+      { "title": "Garden Gateway", "location": "Sana'a", "category": "Public" },
+      { "title": "Designer Studio", "location": "Ibb", "category": "Creative" }
+    ]
+  },
+  "testimonials": {
+    "eyebrow": "Client voices",
+    "title": "What our partners say",
+    "items": [
+      {
+        "name": "Ali Saeed",
+        "role": "Project manager",
+        "quote": "Working with PYB3DCP was exceptional. They brought innovative solutions and a speed of delivery that exceeded our expectations.",
+        "rating": 5
+      },
+      {
+        "name": "Sarah Mohammed",
+        "role": "Architect",
+        "quote": "Design precision and execution professionalism. I recommend them for any project that needs modern construction techniques.",
+        "rating": 5
+      },
+      {
+        "name": "Reda Ali",
+        "role": "Entrepreneur",
+        "quote": "3D printing saved us real time and cost. The team is professional, and their post-delivery support is excellent.",
+        "rating": 5
+      },
+      {
+        "name": "Lamia Yousef",
+        "role": "Homeowner",
+        "quote": "My dream home came to life — high quality and unique design. Thank you to the PYB3DCP team for their creativity and commitment.",
+        "rating": 5
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Questions clients frequently ask",
+    "items": [
+      {
+        "q": "What are your main services?",
+        "a": "3D concrete printing, custom project design, specialist engineering consulting, and maintenance & restoration of structures."
+      },
+      {
+        "q": "How do you ensure print quality?",
+        "a": "We rely on the latest 3D printing technology, and every phase of execution undergoes strict quality control for precision and consistency."
+      },
+      {
+        "q": "Do you offer custom services?",
+        "a": "Yes. We deliver fully custom solutions tailored to each project and client — from design through handover."
+      }
+    ]
+  },
+  "cta": {
+    "eyebrow": "Let's start together",
+    "title": "Have a project that needs 3D printing?",
+    "subtitle": "Message us today and our team will reach out within 24 hours.",
+    "form": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "message": "Tell us about your project",
+      "submit": "Send message",
+      "success": "Your message was sent — we'll be in touch shortly.",
+      "error": "Something went wrong. Please try again."
+    },
+    "contact": {
+      "address": "Sana'a — Ring Road",
+      "phone": "735812138",
+      "email": "info@pyb3dcp.com",
+      "whatsapp": "Chat on WhatsApp",
+      "callUs": "Call us",
+      "emailUs": "Email us"
+    }
+  },
+  "footer": {
+    "brand": "Print your building",
+    "tagline": "PYB3DCP — print your building",
+    "rights": "All rights reserved © {year} PYB3DCP",
+    "nav": "Quick links",
+    "social": "Follow us",
+    "contact": "Get in touch"
+  },
+  "backToTop": "Back to top"
+}

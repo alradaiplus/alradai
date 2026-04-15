@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pyb3dcp.com/sitemap.xml
