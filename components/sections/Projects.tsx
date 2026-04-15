@@ -42,7 +42,10 @@ export default function Projects() {
 
   return (
     <section id="projects" ref={sectionRef} className="section-shell">
-      <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+      <motion.div
+        style={{ y: parallax }}
+        className="mb-10 flex flex-wrap items-end justify-between gap-6"
+      >
         <div>
           <p className="eyebrow">{t('eyebrow')}</p>
           <h2 className="display mt-4 max-w-[14ch] text-balance text-white">
@@ -71,7 +74,7 @@ export default function Projects() {
             <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
           </button>
         </div>
-      </div>
+      </motion.div>
 
       <div
         ref={railRef}
@@ -79,9 +82,8 @@ export default function Projects() {
         className="no-scrollbar mask-fade-edges -mx-4 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-4"
       >
         {items.map((p, i) => (
-          <motion.article
+          <article
             key={p.title}
-            style={{ y: parallax }}
             className="glass glass-hover group relative w-[78%] shrink-0 snap-center overflow-hidden sm:w-[52%] lg:w-[34%]"
           >
             <div className="relative aspect-[4/5] overflow-hidden">
@@ -102,7 +104,7 @@ export default function Projects() {
                 </p>
               </div>
             </div>
-          </motion.article>
+          </article>
         ))}
       </div>
 

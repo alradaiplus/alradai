@@ -12,6 +12,7 @@ import Footer from '@/components/layout/Footer';
 import PersistentBackground from '@/components/layout/PersistentBackground';
 import WhatsAppFloat from '@/components/ui/WhatsAppFloat';
 import BackToTop from '@/components/ui/BackToTop';
+import Preloader from '@/components/ui/Preloader';
 
 import '../globals.css';
 
@@ -60,9 +61,14 @@ export async function generateMetadata({
     },
     alternates: {
       languages: {
-        ar: '/ar',
+        ar: '/',
         en: '/en',
       },
+    },
+    manifest: '/manifest.webmanifest',
+    icons: {
+      icon: '/favicon.svg',
+      apple: '/apple-touch-icon.png',
     },
   };
 }
@@ -95,6 +101,7 @@ export default async function LocaleLayout({
     >
       <body className="bg-ink text-white antialiased">
         <NextIntlClientProvider messages={messages} locale={locale}>
+          <Preloader />
           <PersistentBackground />
           <SmoothScroll>
             <ScrollProgress />
