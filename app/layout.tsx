@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 
-import './tracker.css';
+import './globals.css';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -11,25 +11,21 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Noter — Tracker',
+  title: 'Notes Canvas',
   description:
-    'Noter — a premium life operating system for ambitious students, founders, researchers, and engineers.',
+    'Notes Canvas captures every thought, links them automatically, and tells you what you were really thinking about.',
 };
 
 export const viewport: Viewport = {
-  themeColor: '#111111',
+  themeColor: '#0E0E0E',
   width: 'device-width',
   initialScale: 1,
 };
 
-export default function TrackerLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className="tracker-body">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
