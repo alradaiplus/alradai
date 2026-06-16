@@ -15,6 +15,7 @@ import { BlockEditorSheet } from '@/src/components/overlays/BlockEditorSheet';
 import { useHotkey } from '@/src/hooks/useHotkey';
 import { useSettings } from '@/src/store/settingsStore';
 import { useInbox } from '@/src/store/inboxStore';
+import { useMemory } from '@/src/store/memoryStore';
 import { useUI } from '@/src/store/uiStore';
 import { backfillEmbeddings } from '@/src/ai/embeddings';
 import { onTauriEvent } from '@/src/core/tauri';
@@ -24,6 +25,7 @@ export function Shell() {
   const settings = useSettings((s) => s.settings);
   const hydrateSettings = useSettings((s) => s.hydrate);
   const hydrateInbox = useInbox((s) => s.hydrate);
+  const loadMemory = useMemory((s) => s.load);
 
   const overlay = useUI((s) => s.overlay);
   const surface = useUI((s) => s.surface);
@@ -35,7 +37,8 @@ export function Shell() {
   useEffect(() => {
     void hydrateSettings();
     void hydrateInbox();
-  }, [hydrateSettings, hydrateInbox]);
+    void loadMemory();
+  }, [hydrateSettings, hydrateInbox, loadMemory]);
 
   useEffect(() => {
     if (!settingsReady) return;

@@ -6,9 +6,11 @@ import { Sheet } from '@/src/components/primitives/Sheet';
 import { Button } from '@/src/components/primitives/Button';
 import { makeProvider } from '@/src/ai/provider';
 import { useAgent } from '@/src/store/agentStore';
+import { useMemory } from '@/src/store/memoryStore';
 import { useSettings } from '@/src/store/settingsStore';
 import { useUI } from '@/src/store/uiStore';
 import type { ReasoningLevel } from '@/src/core/types';
+import type { Memory } from '@/src/core/memory/types';
 
 const REASONING: ReasoningLevel[] = ['off', 'low', 'medium', 'high'];
 
@@ -189,6 +191,8 @@ export function SettingsSheet() {
         </Field>
       </Section>
 
+      <MemorySection />
+
       <Section label="Canvas">
         <Field label="Snap to grid">
           <Toggle
@@ -286,5 +290,108 @@ function ModelSelect({ value, onChange }: { value: string; onChange: (v: string)
         </option>
       ))}
     </select>
+  );
+}
+
+// ── Memory ─────────────────────────────────────────────────
+//
+// Intentionally tiny. Count + searchable list + delete. The value of
+// the memory layer lives in Recall and Synthesis quality — not here.
+
+function MemorySection() {
+  const ready = useMemory((s) => s.ready);
+  const count = useMemory((s) => s.count);
+  const recent = useMemory((s) => s.recent);
+  const load = useMemory((s) => s.load);
+  const search = useMemory((s) => s.search);
+  const del = useMemory((s) => s.deleteMemory);
+
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState<Memory[]>([]);
+
+  useEffect(() => {
+    if (!ready) void load();
+  }, [ready, load]);
+
+  useEffect(() => {
+    let alive = true;
+    if (!open) return;
+    if (q.trim().length === 0) {
+      setResults(recent);
+      return;
+    }
+    void search(q).then((r) => {
+      if (alive) setResults(r);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [open, q, recent, search]);
+
+  return (
+    <Section label="Memory">
+      <Field
+        label={`${count} memor${count === 1 ? 'y' : 'ies'}`}
+        hint="What the agent knows about you. Updated nightly."
+      >
+        <Button onClick={() => setOpen((o) => !o)}>
+          {open ? 'Hide' : 'View'}
+        </Button>
+      </Field>
+
+      {open ? (
+        <div style={{ marginTop: 12 }}>
+          <input
+            className="nc-sheet__input"
+            style={{ minWidth: '100%' }}
+            value={q}
+            placeholder="Search memories…"
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {results.length === 0 ? (
+              <div className="nc-empty" style={{ padding: '12px 0' }}>
+                {q ? 'No matches.' : 'No memories yet — write a few blocks and the agent will start learning tonight.'}
+              </div>
+            ) : (
+              results.map((m) => <MemoryRow key={m.id} m={m} onDelete={() => del(m.id)} />)
+            )}
+          </div>
+        </div>
+      ) : null}
+    </Section>
+  );
+}
+
+function MemoryRow({ m, onDelete }: { m: Memory; onDelete: () => void }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '60px minmax(0,1fr) auto',
+        gap: 12,
+        padding: '10px 12px',
+        border: '1px solid var(--hairline)',
+        borderRadius: 10,
+        alignItems: 'start',
+      }}
+    >
+      <span style={{ fontSize: 10.5, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+        {m.tier}
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text)' }}>{m.subjectLabel}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 2, lineHeight: 1.45 }}>
+          {m.statement}
+        </div>
+        <div style={{ fontSize: 10.5, color: 'var(--text-mute)', marginTop: 4 }}>
+          {m.evidenceCount} block{m.evidenceCount === 1 ? '' : 's'} · confidence {Math.round(m.confidence * 100)}%
+        </div>
+      </div>
+      <Button variant="ghost" onClick={onDelete} aria-label="Delete">
+        ×
+      </Button>
+    </div>
   );
 }

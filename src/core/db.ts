@@ -15,6 +15,7 @@ import type {
 import { DEFAULT_SETTINGS } from './types';
 import { extractLinks, extractTags, tokenize } from './text';
 import { ulid } from './ids';
+import type { Memory } from './memory/types';
 
 class NoterDB extends Dexie {
   blocks!: Table<Block, string>;
@@ -22,6 +23,12 @@ class NoterDB extends Dexie {
   agentRuns!: Table<AgentRun, string>;
   embeddings!: Table<{ blockId: string; vector: ArrayBuffer; dim: number }, string>;
   kv!: Table<{ key: string; value: unknown }, string>;
+  // v2 — memory substrate
+  memories!: Table<Memory, string>;
+  memoryEmbeddings!: Table<
+    { memoryId: string; vector: ArrayBuffer; dim: number },
+    string
+  >;
 
   constructor() {
     super('noter');
@@ -33,6 +40,12 @@ class NoterDB extends Dexie {
       agentRuns: 'id, kind, ranAt, ok',
       embeddings: 'blockId',
       kv: 'key',
+    });
+    // v2 — additive only. Existing data is untouched.
+    this.version(2).stores({
+      memories:
+        'id, tier, subject, isHead, createdAt, updatedAt, archivedAt, [tier+isHead], [tier+subject+isHead]',
+      memoryEmbeddings: 'memoryId',
     });
   }
 }
