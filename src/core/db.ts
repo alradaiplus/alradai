@@ -47,6 +47,12 @@ class NoterDB extends Dexie {
         'id, tier, subject, isHead, createdAt, updatedAt, archivedAt, [tier+isHead], [tier+subject+isHead]',
       memoryEmbeddings: 'memoryId',
     });
+    // v3 — multi-entry index on sourceBlockIds for O(1) contradiction
+    // detection from the editor.
+    this.version(3).stores({
+      memories:
+        'id, tier, subject, isHead, supersededBy, createdAt, updatedAt, archivedAt, [tier+isHead], [tier+subject+isHead], *sourceBlockIds',
+    });
   }
 }
 
