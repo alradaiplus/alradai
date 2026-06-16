@@ -16,6 +16,7 @@ import { DEFAULT_SETTINGS } from './types';
 import { extractLinks, extractTags, tokenize } from './text';
 import { ulid } from './ids';
 import type { Memory } from './memory/types';
+import type { Board, BoardEdge, BoardNode } from './boards/types';
 
 class NoterDB extends Dexie {
   blocks!: Table<Block, string>;
@@ -29,6 +30,10 @@ class NoterDB extends Dexie {
     { memoryId: string; vector: ArrayBuffer; dim: number },
     string
   >;
+  // v4 — research boards
+  boards!: Table<Board, string>;
+  boardNodes!: Table<BoardNode, string>;
+  boardEdges!: Table<BoardEdge, string>;
 
   constructor() {
     super('noter');
@@ -52,6 +57,12 @@ class NoterDB extends Dexie {
     this.version(3).stores({
       memories:
         'id, tier, subject, isHead, supersededBy, createdAt, updatedAt, archivedAt, [tier+isHead], [tier+subject+isHead], *sourceBlockIds',
+    });
+    // v4 — research boards. Additive only.
+    this.version(4).stores({
+      boards: 'id, createdAt, topic, expiresAt',
+      boardNodes: 'id, boardId, blockId, cluster',
+      boardEdges: 'id, boardId, fromBlockId, toBlockId',
     });
   }
 }

@@ -7,18 +7,30 @@ import { searchBlocks, db } from '@/src/core/db';
 import { firstLine } from '@/src/core/text';
 import { ago } from '@/src/core/time';
 import { useDebounced } from '@/src/hooks/useDebounced';
+import { useBoard } from '@/src/store/boardStore';
 import { useUI } from '@/src/store/uiStore';
 import type { Block } from '@/src/core/types';
+import type { Board } from '@/src/core/boards/types';
 
-type Tab = 'blocks' | 'tags' | 'commands';
+type Tab = 'blocks' | 'tags' | 'boards' | 'commands';
 
-type Hit = { kind: 'block'; block: Block } | { kind: 'tag'; tag: string; count: number } | { kind: 'command'; label: string; do: () => void };
+type Hit =
+  | { kind: 'block'; block: Block }
+  | { kind: 'tag'; tag: string; count: number }
+  | { kind: 'board'; board: Board }
+  | { kind: 'board-generate'; topic: string }
+  | { kind: 'command'; label: string; do: () => void };
 
 export function CommandBar() {
   const close = useUI((s) => s.close);
   const open = useUI((s) => s.open);
   const setSurface = useUI((s) => s.setSurface);
   const openEditor = useUI((s) => s.openEditor);
+  const openBoard = useUI((s) => s.openBoard);
+  const generateBoard = useBoard((s) => s.generate);
+  const refreshRecentBoards = useBoard((s) => s.refreshRecent);
+  const recentBoards = useBoard((s) => s.recent);
+  const toast = useUI((s) => s.toast);
 
   const [q, setQ] = useState('');
   const [tab, setTab] = useState<Tab>('blocks');
@@ -41,6 +53,15 @@ export function CommandBar() {
           : await db.blocks.orderBy('updatedAt').reverse().limit(20).toArray();
         if (!cancelled)
           setHits(blocks.map((b) => ({ kind: 'block' as const, block: b })));
+      } else if (tab === 'boards') {
+        await refreshRecentBoards();
+        const list: Hit[] = recentBoards
+          .filter((b) => !query || b.title.toLowerCase().includes(query.toLowerCase()) || b.topic.toLowerCase().includes(query.toLowerCase()))
+          .map((b) => ({ kind: 'board' as const, board: b }));
+        if (query) {
+          list.unshift({ kind: 'board-generate', topic: query });
+        }
+        if (!cancelled) setHits(list);
       } else if (tab === 'tags') {
         const blocks = await db.blocks.toArray();
         const counts = new Map<string, number>();
@@ -106,7 +127,7 @@ export function CommandBar() {
     return () => {
       cancelled = true;
     };
-  }, [debounced, tab, close, open, setSurface]);
+  }, [debounced, tab, close, open, setSurface, recentBoards, refreshRecentBoards]);
 
   function onKey(e: React.KeyboardEvent) {
     if (e.key === 'Escape') {
@@ -120,7 +141,7 @@ export function CommandBar() {
       setFocus((i) => Math.max(0, i - 1));
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      const order: Tab[] = ['blocks', 'tags', 'commands'];
+      const order: Tab[] = ['blocks', 'tags', 'boards', 'commands'];
       const idx = order.indexOf(tab);
       setTab(order[(idx + (e.shiftKey ? -1 : 1) + order.length) % order.length]);
     } else if (e.key === 'Enter') {
@@ -142,6 +163,21 @@ export function CommandBar() {
       import('@/src/store/canvasStore').then(({ useCanvas }) =>
         useCanvas.getState().setQuery(`tag:${h.tag}`),
       );
+    } else if (h.kind === 'board') {
+      close();
+      openBoard(h.board.id);
+    } else if (h.kind === 'board-generate') {
+      const topic = h.topic;
+      close();
+      // Pre-open the board surface in a generating state so the user
+      // sees immediate feedback while the LLM call resolves.
+      void generateBoard(topic).then((id) => {
+        if (id) {
+          openBoard(id);
+        } else {
+          toast('Not enough material on this topic yet.');
+        }
+      });
     } else if (h.kind === 'command') {
       h.do();
     }
@@ -150,6 +186,7 @@ export function CommandBar() {
   const placeholder = useMemo(() => {
     if (tab === 'blocks') return 'Search blocks…';
     if (tab === 'tags') return 'Find a tag…';
+    if (tab === 'boards') return 'Board on… (type a topic and ↵)';
     return 'Type a command…';
   }, [tab]);
 
@@ -166,7 +203,7 @@ export function CommandBar() {
           />
         </div>
         <div className="nc-cmd__tabs">
-          {(['blocks', 'tags', 'commands'] as Tab[]).map((t) => (
+          {(['blocks', 'tags', 'boards', 'commands'] as Tab[]).map((t) => (
             <div
               key={t}
               className={`nc-cmd__tab ${tab === t ? 'nc-cmd__tab--active' : ''}`}
@@ -220,11 +257,29 @@ function renderHit(h: Hit) {
       </>
     );
   }
+  if (h.kind === 'board') {
+    return (
+      <>
+        <span>{h.board.title}</span>
+        <span className="nc-cmd__item-meta">{ago(h.board.createdAt)}</span>
+      </>
+    );
+  }
+  if (h.kind === 'board-generate') {
+    return (
+      <>
+        <span>Board on: <strong style={{ color: 'var(--text)' }}>{h.topic}</strong></span>
+        <span className="nc-cmd__item-meta">generate</span>
+      </>
+    );
+  }
   return <span>{h.label}</span>;
 }
 
 function hitKey(h: Hit, i: number): string {
   if (h.kind === 'block') return `b:${h.block.id}`;
   if (h.kind === 'tag') return `t:${h.tag}`;
+  if (h.kind === 'board') return `B:${h.board.id}`;
+  if (h.kind === 'board-generate') return `Bg:${h.topic}`;
   return `c:${i}`;
 }

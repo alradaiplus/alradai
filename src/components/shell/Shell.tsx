@@ -8,6 +8,7 @@ import { Toaster } from './Toaster';
 import { TodaySurface } from '@/src/components/surfaces/TodaySurface';
 import { CanvasSurface } from '@/src/components/surfaces/CanvasSurface';
 import { InboxSurface } from '@/src/components/surfaces/InboxSurface';
+import { BoardSurface } from '@/src/components/surfaces/BoardSurface';
 import { CaptureOverlay } from '@/src/components/overlays/CaptureOverlay';
 import { CommandBar } from '@/src/components/overlays/CommandBar';
 import { SettingsSheet } from '@/src/components/overlays/SettingsSheet';
@@ -83,6 +84,7 @@ export function Shell() {
       {surface === 'today' ? <TodaySurface /> : null}
       {surface === 'canvas' ? <CanvasSurface /> : null}
       {surface === 'inbox' ? <InboxSurface /> : null}
+      {surface === 'board' ? <BoardSurface /> : null}
 
       <FAB />
       <Toaster />

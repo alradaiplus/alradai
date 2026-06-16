@@ -651,6 +651,125 @@
   border-radius: 50%;
   background: var(--warn);
 }
+/* ── board surface ───────────────────────────────────────────── */
+
+.nc-board {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: calc(100vh - 56px);
+}
+
+.nc-board-empty {
+  display: grid;
+  place-items: center;
+  height: calc(100vh - 56px);
+}
+
+.nc-board__head {
+  padding: 18px 32px 14px;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.nc-board__crumb {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+}
+
+.nc-board__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.nc-board__sub {
+  font-size: 12px;
+  color: var(--text-mute);
+  margin-top: 4px;
+}
+
+.nc-board__canvas {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle, #1a1a1a 1px, transparent 1px);
+  background-size: 24px 24px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.nc-board__canvas:active { cursor: grabbing; }
+
+.nc-board__world {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.nc-board__edges {
+  position: absolute;
+  top: -2000px; left: -2000px;
+  width: 4000px; height: 4000px;
+  pointer-events: none;
+}
+.nc-board__edges path { pointer-events: stroke; }
+
+.nc-board__cluster-label {
+  position: absolute;
+  top: 0; left: 0;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-mute);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.nc-board-node {
+  position: absolute;
+  top: 0; left: 0;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 120ms ease;
+  will-change: transform;
+}
+
+.nc-board-node:hover {
+  border-color: var(--text-mute);
+}
+
+.nc-board-node__body {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.nc-board__hud {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex; gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
 .nc-thread-row {
   display: block;
   width: 100%;
