@@ -150,20 +150,52 @@ function BoardCanvas({
     setPan({ x: r.width / 2, y: r.height / 2 });
   }, []);
 
-  // Pan via Pointer Events; space-bar drag works too.
+  // Pan via Pointer Events; pinch-zoom via two-pointer tracking.
   const dragRef = useRef<{ x: number; y: number } | null>(null);
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
+
   function onPointerDown(e: React.PointerEvent) {
     if ((e.target as HTMLElement).closest('.nc-board-node')) return;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    dragRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointersRef.current.size === 2) {
+      // Begin pinch — record initial finger distance and current zoom.
+      const pts = Array.from(pointersRef.current.values());
+      pinchRef.current = {
+        dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y),
+        zoom,
+      };
+      dragRef.current = null;
+    } else if (pointersRef.current.size === 1) {
+      dragRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+    }
   }
+
   function onPointerMove(e: React.PointerEvent) {
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+    if (pinchRef.current && pointersRef.current.size === 2) {
+      const pts = Array.from(pointersRef.current.values());
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const ratio = dist / pinchRef.current.dist;
+      setZoom(clamp(pinchRef.current.zoom * ratio, MIN_ZOOM, MAX_ZOOM));
+      return;
+    }
     if (!dragRef.current) return;
-    setPan({ x: e.clientX - dragRef.current.x, y: e.clientY - dragRef.current.y });
+    setPan({
+      x: e.clientX - dragRef.current.x,
+      y: e.clientY - dragRef.current.y,
+    });
   }
-  function onPointerUp() {
-    dragRef.current = null;
+
+  function onPointerUp(e: React.PointerEvent) {
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (pointersRef.current.size === 0) dragRef.current = null;
   }
+
   function onWheel(e: React.WheelEvent) {
     if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
@@ -267,8 +299,39 @@ function BoardCanvas({
         ))}
       </div>
       <div className="nc-board__hud">
-        <span>{Math.round(zoom * 100)}%</span>
-        <span style={{ color: 'var(--text-mute)' }}>· ⌘scroll to zoom · drag to pan</span>
+        <button
+          type="button"
+          className="nc-board__zoom"
+          aria-label="Zoom out"
+          onClick={() => setZoom((z) => clamp(z * 0.85, MIN_ZOOM, MAX_ZOOM))}
+        >
+          −
+        </button>
+        <span style={{ minWidth: 36, textAlign: 'center' }}>
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          type="button"
+          className="nc-board__zoom"
+          aria-label="Zoom in"
+          onClick={() => setZoom((z) => clamp(z * 1.17, MIN_ZOOM, MAX_ZOOM))}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="nc-board__zoom"
+          aria-label="Reset zoom"
+          onClick={() => {
+            setZoom(0.9);
+            if (containerRef.current) {
+              const r = containerRef.current.getBoundingClientRect();
+              setPan({ x: r.width / 2, y: r.height / 2 });
+            }
+          }}
+        >
+          ⟲
+        </button>
       </div>
     </div>
   );

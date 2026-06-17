@@ -31,4 +31,15 @@
   --z-fab: 30;
   --z-toaster: 40;
   --z-overlay: 50;
+
+  /* Safe-area shims. env(safe-area-inset-*) returns 0 on browsers
+     that don't support it, so these are safe as default-zero. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* WCAG 2.5.5 minimum touch target. Applied to primary controls
+     via a media query so desktop density is preserved. */
+  --touch-target: 44px;
 }

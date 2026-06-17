@@ -15,6 +15,10 @@ body {
   color: var(--text);
   font-family: var(--font);
   letter-spacing: -0.011em;
+  /* Disable iOS double-tap zoom on the chrome and avoid the
+     pull-to-refresh dropping the user out of overlays. */
+  touch-action: manipulation;
+  overscroll-behavior-y: contain;
 }
 
 html, body, #__next { height: 100%; }

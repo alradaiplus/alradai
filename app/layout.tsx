@@ -20,6 +20,9 @@ export const viewport: Viewport = {
   themeColor: '#0E0E0E',
   width: 'device-width',
   initialScale: 1,
+  // viewportFit:cover gives us safe-area insets on notched devices.
+  // env(safe-area-inset-*) is consumed by tokens.css fallbacks.
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
