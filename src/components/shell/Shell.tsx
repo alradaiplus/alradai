@@ -20,6 +20,7 @@ import { useInbox } from '@/src/store/inboxStore';
 import { useMemory } from '@/src/store/memoryStore';
 import { useUI } from '@/src/store/uiStore';
 import { backfillEmbeddings } from '@/src/ai/embeddings';
+import { archiveBlock } from '@/src/core/db';
 import { onTauriEvent } from '@/src/core/tauri';
 
 export function Shell() {
@@ -79,6 +80,22 @@ export function Shell() {
   useHotkey('cmd+3', () => {
     if (!overlay) setSurface('inbox');
   });
+  // Undo the last capture within the 5s window. Soft-archives the
+  // block and refreshes affected views.
+  const refreshInbox = useInbox((s) => s.refresh);
+  const toast = useUI((s) => s.toast);
+  useHotkey(
+    'cmd+z',
+    () => {
+      const last = useUI.getState().consumeCapture();
+      if (!last) return;
+      void archiveBlock(last.blockId).then(() => {
+        void refreshInbox();
+        toast('Undone');
+      });
+    },
+    { allowInInputs: true },
+  );
 
   return (
     <div className="nc-shell">

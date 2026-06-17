@@ -11,6 +11,7 @@ import { useUI } from '@/src/store/uiStore';
 export function CaptureOverlay() {
   const close = useUI((s) => s.close);
   const toast = useUI((s) => s.toast);
+  const recordCapture = useUI((s) => s.recordCapture);
   const capture = useInbox((s) => s.capture);
   const todayHydrate = useToday((s) => s.refresh);
   const [text, setText] = useState('');
@@ -23,7 +24,8 @@ export function CaptureOverlay() {
   async function fileInbox() {
     const body = text.trim();
     if (!body) return close();
-    await capture(body);
+    const block = await capture(body);
+    recordCapture(block.id);
     toast('Filed to Inbox · ⌘Z to undo');
     close();
   }
@@ -31,7 +33,8 @@ export function CaptureOverlay() {
   async function fileToday() {
     const body = text.trim();
     if (!body) return close();
-    await capture(body, { source: 'manual' });
+    const block = await capture(body, { source: 'manual' });
+    recordCapture(block.id);
     await todayHydrate();
     toast('Filed to Today');
     close();

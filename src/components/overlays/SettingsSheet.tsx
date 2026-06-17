@@ -5,11 +5,14 @@ import { useEffect, useState } from 'react';
 import { Sheet } from '@/src/components/primitives/Sheet';
 import { Button } from '@/src/components/primitives/Button';
 import { makeProvider } from '@/src/ai/provider';
+import { recentRuns } from '@/src/core/agentRuns';
+import { downloadAsFile, exportBlocksAsMarkdown, wipeAllData } from '@/src/core/exportData';
+import { ago } from '@/src/core/time';
 import { useAgent } from '@/src/store/agentStore';
 import { useMemory } from '@/src/store/memoryStore';
 import { useSettings } from '@/src/store/settingsStore';
 import { useUI } from '@/src/store/uiStore';
-import type { ReasoningLevel } from '@/src/core/types';
+import type { AgentRun, ReasoningLevel } from '@/src/core/types';
 import type { Memory } from '@/src/core/memory/types';
 
 const REASONING: ReasoningLevel[] = ['off', 'low', 'medium', 'high'];
@@ -208,6 +211,8 @@ export function SettingsSheet() {
 
       <MemorySection />
 
+      <AgentActivitySection />
+
       <Section label="Canvas">
         <Field label="Snap to grid">
           <Toggle
@@ -217,14 +222,7 @@ export function SettingsSheet() {
         </Field>
       </Section>
 
-      <Section label="Data">
-        <Field label="Export">
-          <Button>Export · markdown</Button>
-        </Field>
-        <Field label="Danger zone">
-          <Button variant="danger">Delete all blocks</Button>
-        </Field>
-      </Section>
+      <DataSection />
     </Sheet>
   );
 }
@@ -408,5 +406,178 @@ function MemoryRow({ m, onDelete }: { m: Memory; onDelete: () => void }) {
         ×
       </Button>
     </div>
+  );
+}
+
+// ── Agent Activity ───────────────────────────────────────────
+//
+// Surfaces what the agent actually did and where it failed. Without
+// this, silent LLM errors become invisible — the first source of
+// "the AI doesn't work" misperception identified in the audit.
+
+function AgentActivitySection() {
+  const [runs, setRuns] = useState<AgentRun[]>([]);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<null | 'synthesis' | 'thread'>(null);
+  const triggerSynthesis = useAgent((s) => s.triggerSynthesis);
+  const triggerThread = useAgent((s) => s.triggerThreadDiscovery);
+  const refreshMorning = useAgent((s) => s.refreshMorning);
+  const refreshThreads = useAgent((s) => s.refreshThreads);
+  const toast = useUI((s) => s.toast);
+
+  async function refresh() {
+    setRuns(await recentRuns(20));
+  }
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  async function runSynthesis() {
+    setBusy('synthesis');
+    await triggerSynthesis();
+    await refreshMorning();
+    await refresh();
+    setBusy(null);
+    toast('Synthesis run');
+  }
+  async function runThread() {
+    setBusy('thread');
+    await triggerThread();
+    await refreshThreads();
+    await refresh();
+    setBusy(null);
+    toast('Thread discovery run');
+  }
+
+  const failures = runs.filter((r) => !r.ok).length;
+
+  return (
+    <Section label="Agent Activity">
+      <Field
+        label={
+          failures > 0
+            ? `${failures} recent failure${failures === 1 ? '' : 's'}`
+            : 'All runs succeeded'
+        }
+        hint="Last 20 agent runs across synthesis, memory, threads, boards."
+      >
+        <Button onClick={() => setOpen((o) => !o)}>
+          {open ? 'Hide' : 'View'}
+        </Button>
+      </Field>
+
+      <Field label="Run now">
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button onClick={runSynthesis} disabled={busy !== null}>
+            {busy === 'synthesis' ? 'Running…' : 'Synthesis'}
+          </Button>
+          <Button onClick={runThread} disabled={busy !== null}>
+            {busy === 'thread' ? 'Running…' : 'Threads'}
+          </Button>
+        </div>
+      </Field>
+
+      {open ? (
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {runs.length === 0 ? (
+            <div className="nc-empty" style={{ padding: '8px 0' }}>
+              No runs yet.
+            </div>
+          ) : (
+            runs.map((r) => <AgentRunRow key={r.id} r={r} />)
+          )}
+        </div>
+      ) : null}
+    </Section>
+  );
+}
+
+function AgentRunRow({ r }: { r: AgentRun }) {
+  const ok = r.ok === 1;
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '60px 70px 1fr auto',
+        gap: 10,
+        padding: '8px 0',
+        borderTop: '1px solid var(--hairline-soft)',
+        alignItems: 'baseline',
+        fontSize: 12,
+      }}
+    >
+      <span style={{ color: 'var(--text-mute)' }}>{r.kind}</span>
+      <span style={{ color: ok ? 'var(--good)' : 'var(--bad)' }}>
+        {ok ? 'ok' : 'failed'}
+      </span>
+      <span style={{ color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {ok
+          ? r.model
+          : (r.err ?? 'unknown error').slice(0, 120)}
+      </span>
+      <span style={{ color: 'var(--text-mute)' }}>{ago(r.ranAt)}</span>
+    </div>
+  );
+}
+
+// ── Data ─────────────────────────────────────────────────────
+
+function DataSection() {
+  const toast = useUI((s) => s.toast);
+  const close = useUI((s) => s.close);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+
+  async function doExport() {
+    const md = await exportBlocksAsMarkdown();
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadAsFile(`notes-canvas-${stamp}.md`, md);
+    toast('Export downloaded');
+  }
+
+  async function doWipe() {
+    await wipeAllData();
+    toast('All blocks deleted');
+    setConfirming(false);
+    setConfirmText('');
+    close();
+  }
+
+  return (
+    <Section label="Data">
+      <Field label="Export" hint="One markdown file with every live block.">
+        <Button onClick={doExport}>Export · markdown</Button>
+      </Field>
+      <Field
+        label="Danger zone"
+        hint="Removes every block, memory, board, embedding, and run log. Keys + theme preserved. Irreversible."
+      >
+        {confirming ? (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              className="nc-sheet__input"
+              value={confirmText}
+              placeholder='Type "delete"'
+              onChange={(e) => setConfirmText(e.target.value)}
+              style={{ minWidth: 140 }}
+            />
+            <Button
+              variant="danger"
+              disabled={confirmText.trim().toLowerCase() !== 'delete'}
+              onClick={doWipe}
+            >
+              Confirm
+            </Button>
+            <Button variant="ghost" onClick={() => { setConfirming(false); setConfirmText(''); }}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button variant="danger" onClick={() => setConfirming(true)}>
+            Delete all blocks
+          </Button>
+        )}
+      </Field>
+    </Section>
   );
 }
