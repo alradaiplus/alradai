@@ -757,6 +757,40 @@
   line-height: 1.4;
 }
 
+.nc-board__generating {
+  display: grid;
+  place-items: center;
+  gap: 32px;
+  padding: 24px;
+}
+.nc-board__generating-stage {
+  position: relative;
+  width: 480px;
+  height: 240px;
+}
+.nc-board__phantom {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 120px;
+  height: 44px;
+  margin-top: -22px;
+  margin-left: -60px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--surface);
+  animation: ncPhantomPulse 1.4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes ncPhantomPulse {
+  0%, 100% { opacity: 0.22; }
+  50%      { opacity: 0.65; }
+}
+.nc-board__generating-caption {
+  font-size: 12.5px;
+  color: var(--text-mute);
+  letter-spacing: -0.005em;
+}
+
 .nc-board__hud {
   position: absolute;
   left: 16px;

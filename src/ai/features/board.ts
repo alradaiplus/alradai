@@ -7,17 +7,21 @@
 // Pipeline
 //   1. embed(topic) → top-N blocks by cosine
 //   2. cluster blocks (worker)
-//   3. one LLM call (json mode) → { title, clusters[], edges[] }
+//   3. inject memory context + already-named themes from threads
+//   4. one LLM call (json mode) → { title, clusters[], edges[] }
 //        - LLM names each cluster and places it on the plane
 //        - LLM emits ≤ N typed edges
-//   4. locally fan-out per-node positions around each cluster center
-//   5. persist as boards/board_nodes/board_edges rows
+//   5. locally fan-out per-node positions around each cluster center
+//   6. persist as boards/board_nodes/board_edges rows
+//
 
 import { call } from '@/src/ai/queue';
 import { embed, cosine } from '@/src/ai/embeddings';
 import { cluster as clusterFn } from '@/src/ai/features/_workers/cluster.worker';
+import { buildContext } from '@/src/ai/features/memory';
 import { db } from '@/src/core/db';
 import { createBoard } from '@/src/core/boards/boards';
+import { THREAD_TAG, parseThreadBody } from '@/src/core/threads';
 import { useSettings } from '@/src/store/settingsStore';
 import type { Block } from '@/src/core/types';
 import type { Board, BoardCluster, EdgeLabel } from '@/src/core/boards/types';
@@ -27,7 +31,13 @@ const SYSTEM = `You are the research-board agent for Notes Canvas.
 You are NOT drawing a graph of how notes connect. You are stating what
 you think is happening across the user's blocks on the topic.
 
-You receive a topic and a set of pre-grouped blocks. Output STRICT JSON:
+You may receive three additional sections:
+  <known_context>  what you already know about this user from memory
+  <named_themes>   themes the user has already crystallized into
+                   recurring threads — never re-name these clusters
+  Cluster N        the raw blocks pre-grouped for you to interpret
+
+Output STRICT JSON:
 
 {
   "title": "<≤6 words>",
@@ -115,8 +125,23 @@ export async function generateBoard(topic: string): Promise<GeneratedBoard | nul
     return `Cluster ${cid} (${memberIds.length} blocks):\n${sample}`;
   });
 
-  // 3. LLM call (structured output)
-  const userPrompt = `Topic: ${t}\n\n${clusterPayload.join('\n\n')}`;
+  // 3. Inject memory + already-named themes.
+  const memoryCtx = await buildContext(t, 300);
+  const candidateBlocksFlat = Array.from(blocksById.values());
+  const threadTitles = collectNamedThemes(candidateBlocksFlat);
+  const namedThemesBlock = threadTitles.length
+    ? `<named_themes>\n${threadTitles.map((x) => `- ${x}`).join('\n')}\n</named_themes>`
+    : '';
+
+  // 4. LLM call (structured output)
+  const userPrompt = [
+    `Topic: ${t}`,
+    memoryCtx,
+    namedThemesBlock,
+    ...clusterPayload,
+  ]
+    .filter((s) => s && s.length > 0)
+    .join('\n\n');
   const res = await call('board', {
     model: settings.models.boards,
     system: SYSTEM,
@@ -262,6 +287,25 @@ function safeParseBoardJson(text: string): RawBoardJson | null {
 function clamp(x: number, lo: number, hi: number): number {
   if (!Number.isFinite(x)) return (lo + hi) / 2;
   return Math.min(hi, Math.max(lo, x));
+}
+
+/**
+ * Pull theme titles out of any thread Blocks present in the retrieval
+ * set. The agent is told never to re-name these.
+ */
+function collectNamedThemes(blocks: Block[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const b of blocks) {
+    if (!b.tags.includes(THREAD_TAG)) continue;
+    const { title } = parseThreadBody(b.body);
+    const norm = title.toLowerCase();
+    if (!title || seen.has(norm)) continue;
+    seen.add(norm);
+    out.push(title);
+    if (out.length >= 8) break;
+  }
+  return out;
 }
 
 /**

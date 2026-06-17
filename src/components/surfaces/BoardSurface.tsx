@@ -44,20 +44,26 @@ export function BoardSurface() {
     }
   }, [activeId, board, load]);
 
+  // In-flight UI: check status BEFORE activeId so generation can
+  // render its progress before a board id exists.
+  if (status === 'generating') {
+    return (
+      <main className="nc-board-empty">
+        <BoardGenerating />
+      </main>
+    );
+  }
+  if (status === 'loading') {
+    return (
+      <main className="nc-board-empty">
+        <div className="nc-empty">Loading board…</div>
+      </main>
+    );
+  }
   if (!activeId) {
     return (
       <main className="nc-board-empty">
         <div className="nc-empty">No board open. Use ⌘K → &quot;board: topic&quot;.</div>
-      </main>
-    );
-  }
-
-  if (status === 'loading' || status === 'generating') {
-    return (
-      <main className="nc-board-empty">
-        <div className="nc-empty">
-          {status === 'generating' ? 'Generating board…' : 'Loading board…'}
-        </div>
       </main>
     );
   }
@@ -275,4 +281,37 @@ function edgeStroke(label: BoardEdge['label']): string {
 
 function clamp(x: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, x));
+}
+
+// In-flight board generation surface.
+// Six animated phantom nodes + a single line of copy. No spinner —
+// the staggered fade does the work.
+function BoardGenerating() {
+  const phantoms = [
+    { x: -180, y: -80 },
+    { x: 0, y: -120 },
+    { x: 180, y: -60 },
+    { x: -140, y: 60 },
+    { x: 40, y: 80 },
+    { x: 200, y: 90 },
+  ];
+  return (
+    <div className="nc-board__generating">
+      <div className="nc-board__generating-stage">
+        {phantoms.map((p, i) => (
+          <div
+            key={i}
+            className="nc-board__phantom"
+            style={{
+              transform: `translate(${p.x}px, ${p.y}px)`,
+              animationDelay: `${i * 110}ms`,
+            }}
+          />
+        ))}
+      </div>
+      <div className="nc-board__generating-caption">
+        Reading your blocks and recent memory…
+      </div>
+    </div>
+  );
 }

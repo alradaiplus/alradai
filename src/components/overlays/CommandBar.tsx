@@ -169,12 +169,17 @@ export function CommandBar() {
     } else if (h.kind === 'board-generate') {
       const topic = h.topic;
       close();
-      // Pre-open the board surface in a generating state so the user
-      // sees immediate feedback while the LLM call resolves.
+      // Switch to the Board surface *immediately* so the user sees a
+      // "Generating board…" state while the LLM call resolves.
+      const previousSurface = useUI.getState().surface;
+      setSurface('board');
       void generateBoard(topic).then((id) => {
         if (id) {
           openBoard(id);
         } else {
+          // Revert if generation failed so we don't strand the user
+          // on an empty Board surface.
+          setSurface(previousSurface === 'board' ? 'today' : previousSurface);
           toast('Not enough material on this topic yet.');
         }
       });
