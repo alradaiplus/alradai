@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import { Commitments } from '@/src/components/today/Commitments';
 import { MorningParagraph } from '@/src/components/today/MorningParagraph';
+import { NoKeyBanner } from '@/src/components/overlays/Onboarding';
 import { RecallColumn } from '@/src/components/today/RecallColumn';
 import { ThreadsCard } from '@/src/components/today/Threads';
 import { TodayEditor } from '@/src/components/today/TodayEditor';
@@ -44,6 +45,7 @@ export function TodaySurface() {
           <div className="nc-day-header__date">{longDate()}</div>
           <h1 className="nc-day-header__title">Today</h1>
         </header>
+        <NoKeyBanner />
         <MorningParagraph />
         <ThreadsCard />
         <Commitments />

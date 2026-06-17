@@ -13,6 +13,7 @@ import { CaptureOverlay } from '@/src/components/overlays/CaptureOverlay';
 import { CommandBar } from '@/src/components/overlays/CommandBar';
 import { SettingsSheet } from '@/src/components/overlays/SettingsSheet';
 import { BlockEditorSheet } from '@/src/components/overlays/BlockEditorSheet';
+import { Onboarding, useOnboardingGate } from '@/src/components/overlays/Onboarding';
 import { useHotkey } from '@/src/hooks/useHotkey';
 import { useSettings } from '@/src/store/settingsStore';
 import { useInbox } from '@/src/store/inboxStore';
@@ -23,10 +24,10 @@ import { onTauriEvent } from '@/src/core/tauri';
 
 export function Shell() {
   const settingsReady = useSettings((s) => s.ready);
-  const settings = useSettings((s) => s.settings);
   const hydrateSettings = useSettings((s) => s.hydrate);
   const hydrateInbox = useInbox((s) => s.hydrate);
   const loadMemory = useMemory((s) => s.load);
+  const onboarding = useOnboardingGate();
 
   const overlay = useUI((s) => s.overlay);
   const surface = useUI((s) => s.surface);
@@ -41,11 +42,12 @@ export function Shell() {
     void loadMemory();
   }, [hydrateSettings, hydrateInbox, loadMemory]);
 
+  // First-launch Onboarding handles the no-key case now. We only
+  // auto-open Settings if onboarding has already been dismissed.
   useEffect(() => {
     if (!settingsReady) return;
     void backfillEmbeddings();
-    if (!settings.apiKey) open('settings');
-  }, [settingsReady, settings.apiKey, open]);
+  }, [settingsReady]);
 
   // Tauri global shortcut bridge: ⌘⇧Space routes through here.
   useEffect(() => {
@@ -93,6 +95,10 @@ export function Shell() {
       {overlay === 'command' ? <CommandBar /> : null}
       {overlay === 'settings' ? <SettingsSheet /> : null}
       {overlay === 'editor' ? <BlockEditorSheet /> : null}
+
+      {settingsReady && onboarding.show ? (
+        <Onboarding onClose={() => onboarding.setShow(false)} />
+      ) : null}
     </div>
   );
 }

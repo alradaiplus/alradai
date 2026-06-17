@@ -102,7 +102,22 @@ export function SettingsSheet() {
           </select>
         </Field>
 
-        <Field label="API Key" hint="Stored locally. Never sent to our servers.">
+        <Field
+          label="API Key"
+          hint={
+            <>
+              Stored locally. Never sent to our servers.{' '}
+              <a
+                className="nc-onb__link"
+                href="https://openrouter.ai/keys"
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                Create one →
+              </a>
+            </>
+          }
+        >
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               className="nc-sheet__input"
@@ -229,7 +244,7 @@ function Field({
   children,
 }: {
   label: string;
-  hint?: string;
+  hint?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
