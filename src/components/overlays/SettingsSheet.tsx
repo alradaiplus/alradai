@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Sheet } from '@/src/components/primitives/Sheet';
 import { Button } from '@/src/components/primitives/Button';
 import { makeProvider } from '@/src/ai/provider';
+import { renderSynthesis, renderThread } from '@/src/ai/outcomes';
 import { recentRuns } from '@/src/core/agentRuns';
 import { downloadAsFile, exportBlocksAsMarkdown, wipeAllData } from '@/src/core/exportData';
 import { ago } from '@/src/core/time';
@@ -434,19 +435,19 @@ function AgentActivitySection() {
 
   async function runSynthesis() {
     setBusy('synthesis');
-    await triggerSynthesis();
+    const outcome = await triggerSynthesis();
     await refreshMorning();
     await refresh();
     setBusy(null);
-    toast('Synthesis run');
+    toast(renderSynthesis(outcome).message);
   }
   async function runThread() {
     setBusy('thread');
-    await triggerThread();
+    const outcome = await triggerThread();
     await refreshThreads();
     await refresh();
     setBusy(null);
-    toast('Thread discovery run');
+    toast(renderThread(outcome).message);
   }
 
   const failures = runs.filter((r) => !r.ok).length;

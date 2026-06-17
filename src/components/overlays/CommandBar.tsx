@@ -8,6 +8,7 @@ import { firstLine } from '@/src/core/text';
 import { ago } from '@/src/core/time';
 import { useDebounced } from '@/src/hooks/useDebounced';
 import { useBoard } from '@/src/store/boardStore';
+import { useSettings } from '@/src/store/settingsStore';
 import { useUI } from '@/src/store/uiStore';
 import type { Block } from '@/src/core/types';
 import type { Board } from '@/src/core/boards/types';
@@ -169,18 +170,25 @@ export function CommandBar() {
     } else if (h.kind === 'board-generate') {
       const topic = h.topic;
       close();
-      // Switch to the Board surface *immediately* so the user sees a
-      // "Generating board…" state while the LLM call resolves.
+      // Validate key BEFORE switching surfaces — avoids stranding the
+      // user on an empty Board surface and avoids the misleading
+      // "Not enough material" toast on the no-key path.
+      const apiKey = useSettings.getState().settings.apiKey;
+      if (!apiKey || apiKey.trim().length === 0) {
+        toast('Add an OpenRouter key in Settings to generate boards.');
+        useUI.getState().open('settings');
+        return;
+      }
       const previousSurface = useUI.getState().surface;
       setSurface('board');
-      void generateBoard(topic).then((id) => {
-        if (id) {
-          openBoard(id);
+      void generateBoard(topic).then((outcome) => {
+        if (outcome.ok) {
+          openBoard(outcome.boardId);
         } else {
-          // Revert if generation failed so we don't strand the user
-          // on an empty Board surface.
+          // Revert so the user is not stranded on an empty Board surface.
           setSurface(previousSurface === 'board' ? 'today' : previousSurface);
-          toast('Not enough material on this topic yet.');
+          // Surface the real reason, not a universal fallback.
+          toast(outcome.message);
         }
       });
     } else if (h.kind === 'command') {

@@ -56,19 +56,32 @@ export type DiscoveryReport = {
   skippedDuplicates: number;
 };
 
+export type ThreadOutcome =
+  | { ran: true; report: DiscoveryReport }
+  | {
+      ran: false;
+      reason:
+        | 'already-this-week'
+        | 'no-key'
+        | 'too-few-blocks'
+        | 'no-clusters'
+        | 'error';
+      err?: string;
+    };
+
 /**
  * Run at most once per (local) calendar week. Sunday is the canonical
  * trigger day, but any first-open within the week is acceptable.
  */
-export async function runThreadDiscoveryIfDue(): Promise<DiscoveryReport | null> {
+export async function runThreadDiscoveryIfDue(): Promise<ThreadOutcome> {
   const weekKey = weekKeyForSunday();
   const lastThreadRun = await lastRun('thread');
   if (lastThreadRun && weekKeyForSunday(lastThreadRun.ranAt) === weekKey) {
-    return null;
+    return { ran: false, reason: 'already-this-week' };
   }
 
   const settings = useSettings.getState().settings;
-  if (!settings.apiKey) return null;
+  if (!settings.apiKey) return { ran: false, reason: 'no-key' };
 
   const since = Date.now() - LOOKBACK_DAYS * DAY;
   const blocks = await db.blocks
@@ -76,7 +89,22 @@ export async function runThreadDiscoveryIfDue(): Promise<DiscoveryReport | null>
     .above(since)
     .filter((b) => !b.archivedAt && b.source !== 'agent')
     .toArray();
-  if (blocks.length < MIN_CLUSTER_SIZE) return null;
+  if (blocks.length < MIN_CLUSTER_SIZE) {
+    return { ran: false, reason: 'too-few-blocks' };
+  }
+
+  try {
+    return await runDiscoveryInner(blocks, weekKey, settings);
+  } catch (e) {
+    return { ran: false, reason: 'error', err: (e as Error).message };
+  }
+}
+
+async function runDiscoveryInner(
+  blocks: Block[],
+  weekKey: string,
+  settings: ReturnType<typeof useSettings.getState>['settings'],
+): Promise<ThreadOutcome> {
 
   // 1. Embeddings — reuse, lazy-backfill.
   const embeds = await db.embeddings.toArray();
@@ -97,13 +125,7 @@ export async function runThreadDiscoveryIfDue(): Promise<DiscoveryReport | null>
   });
   if (clusters.length === 0) {
     await logEmptyRun(weekKey);
-    return {
-      ranAt: Date.now(),
-      weekKey,
-      candidateClusters: 0,
-      newThreads: 0,
-      skippedDuplicates: 0,
-    };
+    return { ran: false, reason: 'no-clusters' };
   }
 
   // 3. Dedupe & generate.
@@ -165,11 +187,14 @@ export async function runThreadDiscoveryIfDue(): Promise<DiscoveryReport | null>
   });
 
   return {
-    ranAt: Date.now(),
-    weekKey,
-    candidateClusters: clusters.length,
-    newThreads,
-    skippedDuplicates,
+    ran: true,
+    report: {
+      ranAt: Date.now(),
+      weekKey,
+      candidateClusters: clusters.length,
+      newThreads,
+      skippedDuplicates,
+    },
   };
 }
 

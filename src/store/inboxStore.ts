@@ -11,7 +11,10 @@ type InboxStore = {
   focusIdx: number;
   hydrate: () => Promise<void>;
   refresh: () => Promise<void>;
-  capture: (text: string, opts?: { source?: Block['source'] }) => Promise<Block>;
+  capture: (
+    text: string,
+    opts?: { source?: Block['source']; inbox?: boolean },
+  ) => Promise<Block>;
   file: (id: string, tags?: string[]) => Promise<void>;
   archive: (id: string) => Promise<void>;
   focusNext: () => void;
@@ -34,7 +37,10 @@ export const useInbox = create<InboxStore>((set, get) => ({
     const block = await createBlock({
       body: text,
       source: opts?.source ?? 'capture',
-      inbox: true,
+      // Default: capture routes to Inbox for later triage. Callers
+      // who explicitly mean "file to Today" pass inbox=false so the
+      // toast and destination agree.
+      inbox: opts?.inbox ?? true,
     });
     await get().refresh();
     return block;

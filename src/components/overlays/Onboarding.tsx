@@ -236,6 +236,16 @@ function KeyStep({
         </div>
       </div>
 
+      {/* Inline warning when a non-empty key was typed but never tested.
+          Prevents users from saving a typo'd key without warning. */}
+      {keyDraft.trim().length > 0 && testStatus !== 'ok' && testStatus !== 'testing' ? (
+        <div className="nc-onb__warn">
+          {testStatus === 'fail'
+            ? 'The key did not pass the test. Synthesis, threads, and boards will fail.'
+            : 'Untested key. Click Test to confirm it works before continuing.'}
+        </div>
+      ) : null}
+
       <div className="nc-onb__footer">
         <Button variant="ghost" onClick={onBack}>
           ← Back
@@ -247,9 +257,17 @@ function KeyStep({
           <Button
             variant="primary"
             onClick={onFinish}
-            disabled={testStatus === 'fail'}
+            disabled={
+              // A non-empty key MUST be tested before we accept it.
+              // Empty key (explicit Skip path) still allowed.
+              keyDraft.trim().length > 0 && testStatus !== 'ok'
+            }
           >
-            {testStatus === 'ok' ? 'Get started' : 'Save & start'}
+            {testStatus === 'ok'
+              ? 'Get started'
+              : keyDraft.trim().length === 0
+                ? 'Continue without key'
+                : 'Test key first'}
             <Icon name="arrow-right" size={12} />
           </Button>
         </div>

@@ -10,7 +10,9 @@ import { ThreadsCard } from '@/src/components/today/Threads';
 import { TodayEditor } from '@/src/components/today/TodayEditor';
 import { useAgent } from '@/src/store/agentStore';
 import { useToday } from '@/src/store/todayStore';
+import { useUI } from '@/src/store/uiStore';
 import { longDate } from '@/src/core/time';
+import { renderSynthesis, renderThread } from '@/src/ai/outcomes';
 
 export function TodaySurface() {
   const hydrate = useToday((s) => s.hydrate);
@@ -19,23 +21,36 @@ export function TodaySurface() {
   const refreshThreads = useAgent((s) => s.refreshThreads);
   const triggerSynthesis = useAgent((s) => s.triggerSynthesis);
   const triggerThreadDiscovery = useAgent((s) => s.triggerThreadDiscovery);
+  const toast = useUI((s) => s.toast);
 
   useEffect(() => {
     if (!ready) void hydrate();
   }, [ready, hydrate]);
 
-  // Fire-and-forget: nightly synthesis and weekly thread discovery
-  // both catch up on first open.
+  // Auto-trigger on first open. Toast hard errors only — info-level
+  // outcomes (already-ran, too-few-blocks) live on the Morning
+  // Paragraph itself.
   useEffect(() => {
     void refreshMorning();
     void refreshThreads();
-    void triggerSynthesis().then(() => void refreshMorning());
-    void triggerThreadDiscovery().then(() => void refreshThreads());
+
+    void triggerSynthesis().then((o) => {
+      void refreshMorning();
+      const r = renderSynthesis(o);
+      if (r.severity === 'error') toast(r.message);
+    });
+
+    void triggerThreadDiscovery().then((o) => {
+      void refreshThreads();
+      const r = renderThread(o);
+      if (r.severity === 'error') toast(r.message);
+    });
   }, [
     refreshMorning,
     refreshThreads,
     triggerSynthesis,
     triggerThreadDiscovery,
+    toast,
   ]);
 
   return (

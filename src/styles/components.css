@@ -462,12 +462,27 @@
   font: inherit; font-size: 16px; outline: none;
   caret-color: var(--text);
 }
+.nc-capture__buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-top: 1px solid var(--hairline-soft);
+}
+
 .nc-capture__hint {
   padding: 8px 18px 14px;
   font-size: 11px;
   color: var(--text-mute);
   border-top: 1px solid var(--hairline-soft);
   display: flex; gap: 14px; align-items: center;
+  flex-wrap: wrap;
+}
+
+/* On touch / narrow viewports the keyboard hint row would be
+   noise — buttons carry the affordance. */
+@media (pointer: coarse), (max-width: 540px) {
+  .nc-capture__hint { display: none; }
 }
 
 .nc-cmd {
@@ -651,6 +666,40 @@
   border-radius: 50%;
   background: var(--warn);
 }
+/* ── morning paragraph states ─────────────────────────────── */
+
+.nc-pulse-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+  animation: ncPulseDot 1.4s ease-in-out infinite;
+}
+@keyframes ncPulseDot {
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50%      { opacity: 1;    transform: scale(1.1); }
+}
+
+.nc-morning__action {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--motion-fast);
+}
+.nc-morning__action:hover {
+  color: var(--text);
+  border-color: var(--text-mute);
+}
+
+.nc-morning__title-hidden { display: none; }
+
 /* ── onboarding ───────────────────────────────────────────── */
 
 .nc-onb {
@@ -794,6 +843,16 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 6px;
+}
+
+.nc-onb__warn {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--warn);
+  background: transparent;
 }
 
 /* No-key banner on Today */
