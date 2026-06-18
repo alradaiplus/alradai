@@ -10,32 +10,47 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Notes Canvas dark theme — near-black surfaces with a violet/indigo accent
+        // Monochrome dark system — near-black surfaces, near-white accent.
+        // Mirrors the CSS variables in globals.css (single source of truth).
         canvas: {
-          bg: "#0b0b0f",
-          surface: "#121218",
-          panel: "#16161d",
-          elevated: "#1c1c24",
-          border: "#26262f",
-          hover: "#1f1f28",
+          bg: "var(--bg-primary)",
+          surface: "var(--bg-surface)",
+          panel: "var(--bg-secondary)",
+          elevated: "var(--bg-elevated)",
+          border: "var(--border-subtle)",
+          strong: "var(--border-strong)",
+          hover: "var(--bg-elevated)",
         },
         ink: {
-          DEFAULT: "#ededf2",
-          muted: "#9b9ba6",
-          faint: "#6a6a76",
+          DEFAULT: "var(--text-primary)",
+          muted: "var(--text-secondary)",
+          faint: "var(--text-muted)",
         },
         accent: {
-          DEFAULT: "#7c6cf6",
-          hover: "#8f81f8",
-          soft: "rgba(124,108,246,0.14)",
-          ring: "rgba(124,108,246,0.45)",
+          DEFAULT: "var(--accent)",
+          hover: "var(--accent-hover)",
+          foreground: "var(--accent-foreground)",
+          soft: "var(--accent-soft)",
+          ring: "var(--accent-ring)",
         },
+        success: "var(--success)",
+        warning: "var(--warning)",
+        danger: "var(--danger)",
+        // Node category hues — restrained, desaturated tints used only for the
+        // knowledge graph and node accents so types stay distinguishable while
+        // the chrome stays monochrome (Linear / Obsidian convention).
         node: {
-          note: "#7c6cf6",
-          image: "#37b6ff",
-          file: "#f5a623",
-          embed: "#ff6ca6",
-          link: "#34d399",
+          note: "#9aa0a6",
+          task: "#c7c7c7",
+          project: "#e0e0e0",
+          ai: "#b9a7ff",
+          pdf: "#e08f8f",
+          image: "#8fb6e0",
+          voice: "#8fd0c0",
+          research: "#d6c393",
+          embed: "#c79ad0",
+          file: "#d6b48f",
+          link: "#a0a0a0",
         },
       },
       fontFamily: {
@@ -49,7 +64,7 @@ const config: Config = {
       boxShadow: {
         panel: "0 8px 30px rgba(0,0,0,0.5)",
         node: "0 4px 16px rgba(0,0,0,0.35)",
-        glow: "0 0 0 1px rgba(124,108,246,0.4), 0 8px 30px rgba(124,108,246,0.18)",
+        glow: "0 0 0 1px rgba(245,245,245,0.22), 0 8px 30px rgba(0,0,0,0.55)",
       },
       keyframes: {
         "fade-in": {

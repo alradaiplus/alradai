@@ -46,7 +46,7 @@ export function MobilePanels() {
       <div className="absolute bottom-20 right-4 z-[250] flex flex-col gap-2">
         <button
           onClick={() => setSheet("ai")}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-panel"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-panel"
         >
           <Sparkles size={20} />
         </button>

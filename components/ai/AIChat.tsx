@@ -166,7 +166,7 @@ export function AIChat() {
               <div
                 className={
                   m.role === "user"
-                    ? "max-w-[85%] rounded-2xl rounded-br-sm bg-accent px-3 py-2 text-[13px] text-white"
+                    ? "max-w-[85%] rounded-2xl rounded-br-sm bg-accent px-3 py-2 text-[13px] text-accent-foreground"
                     : "max-w-full text-[13px] leading-relaxed text-ink-muted"
                 }
               >
@@ -212,7 +212,7 @@ export function AIChat() {
           <button
             onClick={() => send(input)}
             disabled={busy || !input.trim()}
-            className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-white transition hover:bg-accent-hover disabled:opacity-40"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-accent-foreground transition hover:bg-accent-hover disabled:opacity-40"
           >
             <ArrowUp size={16} />
           </button>

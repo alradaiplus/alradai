@@ -4,6 +4,33 @@
 
 :root {
   color-scheme: dark;
+
+  /* Surfaces */
+  --bg-primary: #050505;
+  --bg-secondary: #0d0d0d;
+  --bg-surface: #141414;
+  --bg-elevated: #1b1b1b;
+
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #cfcfcf;
+  --text-muted: #8a8a8a;
+
+  /* Borders */
+  --border-subtle: #262626;
+  --border-strong: #3a3a3a;
+
+  /* Accent (monochrome — near-white on near-black) */
+  --accent: #f5f5f5;
+  --accent-hover: #ffffff;
+  --accent-foreground: #050505; /* text/icon color on accent fills */
+  --accent-soft: rgba(245, 245, 245, 0.1);
+  --accent-ring: rgba(245, 245, 245, 0.35);
+
+  /* Status (intentionally desaturated to stay on-brand) */
+  --success: #eaeaea;
+  --warning: #d0d0d0;
+  --danger: #a0a0a0;
 }
 
 html,
@@ -12,32 +39,32 @@ body {
 }
 
 body {
-  background: #0b0b0f;
-  color: #ededf2;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2a2a33 transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #2a2a33;
+  background: var(--border-strong);
   border-radius: 999px;
 }
 
 /* --- tldraw theming: blend the canvas into the app shell ----------------- */
 .tl-container {
-  --color-background: #0e0e13;
-  background-color: #0e0e13 !important;
+  --color-background: #050505;
+  background-color: #050505 !important;
 }
 .tl-background {
-  background-color: #0e0e13 !important;
+  background-color: #050505 !important;
 }
 /* Soften the grid to match the product look */
 .tl-grid {

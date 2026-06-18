@@ -68,9 +68,11 @@ export const NODE_TYPE_META: Record<
   NodeType,
   { label: string; color: string; colorVar: string }
 > = {
-  note: { label: "Note", color: "#7c6cf6", colorVar: "node-note" },
-  image: { label: "Image", color: "#37b6ff", colorVar: "node-image" },
-  file: { label: "File", color: "#f5a623", colorVar: "node-file" },
-  embed: { label: "Embed", color: "#ff6ca6", colorVar: "node-embed" },
-  link: { label: "Link", color: "#34d399", colorVar: "node-link" },
+  // Restrained, desaturated category hues that match the monochrome palette
+  // (see tailwind.config.ts `node.*` and ARCHITECTURE.md §14).
+  note: { label: "Note", color: "#9aa0a6", colorVar: "node-note" },
+  image: { label: "Image", color: "#8fb6e0", colorVar: "node-image" },
+  file: { label: "File", color: "#d6b48f", colorVar: "node-file" },
+  embed: { label: "Embed", color: "#c79ad0", colorVar: "node-embed" },
+  link: { label: "Link", color: "#a0a0a0", colorVar: "node-link" },
 };

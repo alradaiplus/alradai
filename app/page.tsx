@@ -23,7 +23,7 @@ export default function Landing() {
         </div>
         <Link
           href="/app"
-          className="rounded-lg bg-accent px-4 py-2 text-[13px] font-medium text-white transition hover:bg-accent-hover"
+          className="rounded-lg bg-accent px-4 py-2 text-[13px] font-medium text-accent-foreground transition hover:bg-accent-hover"
         >
           Open app
         </Link>
@@ -49,7 +49,7 @@ export default function Landing() {
         <div className="mt-8 flex items-center justify-center gap-3">
           <Link
             href="/app"
-            className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[14px] font-medium text-white transition hover:bg-accent-hover"
+            className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[14px] font-medium text-accent-foreground transition hover:bg-accent-hover"
           >
             Start thinking <ArrowRight size={16} />
           </Link>
