@@ -1,42 +1,67 @@
 "use client";
 
 import { useStore } from "@/lib/store";
-import { NODE_TYPE_META } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
-import { Link2, Sparkles, Trash2, CornerUpLeft } from "lucide-react";
+import { NODE_TYPE_META, type TaskPriority, type TaskStatus } from "@/lib/types";
+import { timeAgo, cn } from "@/lib/utils";
+import {
+  Link2,
+  Sparkles,
+  Trash2,
+  CornerUpLeft,
+  CornerDownRight,
+  Spline,
+  Wand2,
+} from "lucide-react";
+
+const STATUSES: TaskStatus[] = ["todo", "doing", "done"];
+const PRIORITIES: TaskPriority[] = ["low", "med", "high"];
 
 /**
- * Node inspector — title, type, tags, properties, backlinks and AI-suggested
- * links for the currently selected node. Mirrors the "Motor Design" detail
- * panel from the product screenshots.
+ * Node inspector — title, type-specific properties, content, tags, AI summary,
+ * connections (backlinks/outgoing + AI suggestions) for the selected node.
  */
 export function Inspector() {
   const selectedId = useStore((s) => s.selectedId);
   const node = useStore((s) => s.nodes.find((n) => n.id === selectedId));
   const edges = useStore((s) => s.edges);
+  const nodes = useStore((s) => s.nodes);
   const update = useStore((s) => s.updateNode);
   const remove = useStore((s) => s.removeNode);
   const select = useStore((s) => s.select);
   const backlinks = useStore((s) => s.backlinks);
+  const outgoing = useStore((s) => s.outgoing);
   const accept = useStore((s) => s.acceptSuggestedEdge);
   const dismiss = useStore((s) => s.dismissSuggestedEdge);
-  const nodes = useStore((s) => s.nodes);
+  const addEdge = useStore((s) => s.addEdge);
+  const startConnect = useStore((s) => s.startConnect);
+  const connectSourceId = useStore((s) => s.connectSourceId);
+  const summarize = useStore((s) => s.summarizeNode);
 
   if (!node) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 text-center text-ink-faint">
         <Sparkles size={22} className="mb-2 opacity-50" />
-        <p className="text-[13px]">Select a node to see its details, tags, and backlinks.</p>
+        <p className="text-[13px]">
+          Select a node to see its details, properties, and connections.
+        </p>
       </div>
     );
   }
 
   const meta = NODE_TYPE_META[node.type];
   const links = backlinks(node.id);
+  const out = outgoing(node.id);
   const suggestions = edges.filter(
-    (e) => e.status === "suggested" && (e.source === node.id || e.target === node.id)
+    (e) =>
+      e.status === "suggested" && (e.source === node.id || e.target === node.id)
   );
   const nameOf = (id: string) => nodes.find((n) => n.id === id)?.title ?? "node";
+  const linkTargets = nodes.filter(
+    (n) =>
+      n.id !== node.id &&
+      n.boardId === node.boardId &&
+      !out.some((o) => o.id === n.id)
+  );
 
   return (
     <div className="flex h-full flex-col overflow-y-auto px-4 py-4">
@@ -51,8 +76,15 @@ export function Inspector() {
           edited {timeAgo(node.updatedAt)}
         </span>
         <button
+          onClick={() => summarize(node.id)}
+          className="ml-auto text-ink-faint transition hover:text-ink"
+          title="AI summary"
+        >
+          <Wand2 size={15} />
+        </button>
+        <button
           onClick={() => remove(node.id)}
-          className="ml-auto text-ink-faint transition hover:text-red-400"
+          className="text-ink-faint transition hover:text-danger"
           title="Delete node"
         >
           <Trash2 size={15} />
@@ -66,6 +98,72 @@ export function Inspector() {
         placeholder="Untitled"
       />
 
+      {/* Task properties */}
+      {node.type === "task" && (
+        <div className="mb-3 space-y-2 rounded-lg border border-canvas-border bg-canvas-panel p-3">
+          <div className="flex items-center gap-1.5">
+            {STATUSES.map((s) => (
+              <button
+                key={s}
+                onClick={() => update(node.id, { status: s })}
+                className={cn(
+                  "flex-1 rounded-md px-2 py-1 text-[11px] font-medium capitalize transition",
+                  node.status === s
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-canvas-elevated text-ink-muted hover:text-ink"
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-ink-faint">Priority</span>
+            <div className="flex flex-1 gap-1">
+              {PRIORITIES.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => update(node.id, { priority: p })}
+                  className={cn(
+                    "flex-1 rounded-md px-2 py-1 text-[11px] uppercase transition",
+                    node.priority === p
+                      ? "bg-canvas-strong text-ink"
+                      : "bg-canvas-elevated text-ink-faint hover:text-ink"
+                  )}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-ink-faint">Due</span>
+            <input
+              type="date"
+              value={node.due ? node.due.slice(0, 10) : ""}
+              onChange={(e) =>
+                update(node.id, {
+                  due: e.target.value
+                    ? new Date(e.target.value).toISOString()
+                    : undefined,
+                })
+              }
+              className="flex-1 rounded-md border border-canvas-border bg-canvas-elevated px-2 py-1 text-[12px] text-ink-muted outline-none focus:border-accent-ring"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Media source */}
+      {(node.type === "link" || node.type === "image" || node.type === "pdf") && (
+        <input
+          value={node.src ?? ""}
+          onChange={(e) => update(node.id, { src: e.target.value })}
+          placeholder="https://…"
+          className="mb-3 w-full rounded-lg border border-canvas-border bg-canvas-panel px-3 py-2 text-[12px] text-ink-muted outline-none focus:border-accent-ring"
+        />
+      )}
+
       <textarea
         value={node.content}
         onChange={(e) => update(node.id, { content: e.target.value })}
@@ -73,17 +171,37 @@ export function Inspector() {
         placeholder="Write in markdown. Use [[Title]] to link notes."
       />
 
+      {node.summary && (
+        <div className="mt-3 rounded-lg border border-canvas-border bg-canvas-panel p-3">
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+            <Sparkles size={12} /> AI summary
+          </div>
+          <p className="text-[12px] leading-relaxed text-ink-muted">
+            {node.summary}
+          </p>
+        </div>
+      )}
+
+      {/* Tags */}
       <div className="mt-4">
         <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
           Tags
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {node.tags.map((t) => (
+          {node.tags.map((tag) => (
             <span
-              key={t}
-              className="rounded-full bg-canvas-elevated px-2 py-0.5 text-[11px] text-ink-muted"
+              key={tag}
+              className="flex items-center gap-1 rounded-full bg-canvas-elevated px-2 py-0.5 text-[11px] text-ink-muted"
             >
-              #{t}
+              #{tag}
+              <button
+                onClick={() =>
+                  update(node.id, { tags: node.tags.filter((x) => x !== tag) })
+                }
+                className="text-ink-faint hover:text-ink"
+              >
+                ×
+              </button>
             </span>
           ))}
           <input
@@ -100,9 +218,50 @@ export function Inspector() {
         </div>
       </div>
 
+      {/* Connections */}
+      <div className="mt-5">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+          <Spline size={12} /> Connect
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value=""
+            onChange={(e) => {
+              if (e.target.value) addEdge(node.id, e.target.value, "reference");
+            }}
+            className="flex-1 rounded-lg border border-canvas-border bg-canvas-panel px-2 py-1.5 text-[12px] text-ink-muted outline-none focus:border-accent-ring"
+          >
+            <option value="">Link to a node…</option>
+            {linkTargets.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.title}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => startConnect(node.id)}
+            className={cn(
+              "rounded-lg border px-2.5 py-1.5 text-[12px] transition",
+              connectSourceId === node.id
+                ? "border-accent-ring text-accent-hover"
+                : "border-canvas-border text-ink-muted hover:text-ink"
+            )}
+            title="Then click another node on the canvas"
+          >
+            On canvas
+          </button>
+        </div>
+        {connectSourceId === node.id && (
+          <p className="mt-1.5 text-[11px] text-accent-hover">
+            Now click another node on the canvas to connect.
+          </p>
+        )}
+      </div>
+
+      {/* AI suggested links */}
       {suggestions.length > 0 && (
         <div className="mt-5">
-          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-node-embed">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-node-ai">
             <Sparkles size={12} /> AI suggested links
           </div>
           {suggestions.map((e) => {
@@ -110,7 +269,7 @@ export function Inspector() {
             return (
               <div
                 key={e.id}
-                className="mb-1.5 flex items-center gap-2 rounded-lg border border-node-embed/30 bg-node-embed/5 px-2.5 py-1.5"
+                className="mb-1.5 flex items-center gap-2 rounded-lg border border-node-ai/30 bg-node-ai/5 px-2.5 py-1.5"
               >
                 <span className="flex-1 truncate text-[12px] text-ink">
                   {nameOf(otherId)}
@@ -122,7 +281,7 @@ export function Inspector() {
                 </span>
                 <button
                   onClick={() => accept(e.id)}
-                  className="rounded bg-node-embed/20 px-2 py-0.5 text-[11px] text-node-embed hover:bg-node-embed/30"
+                  className="rounded bg-node-ai/20 px-2 py-0.5 text-[11px] text-node-ai hover:bg-node-ai/30"
                 >
                   Link
                 </button>
@@ -138,25 +297,59 @@ export function Inspector() {
         </div>
       )}
 
-      <div className="mt-5">
-        <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-          <CornerUpLeft size={12} /> Backlinks ({links.length})
-        </div>
-        {links.length === 0 ? (
-          <p className="text-[12px] text-ink-faint">No backlinks yet.</p>
-        ) : (
-          links.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => select(l.id)}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12px] text-ink-muted transition hover:bg-canvas-hover hover:text-ink"
-            >
-              <Link2 size={13} className="text-accent" />
-              {l.title}
-            </button>
-          ))
-        )}
+      {/* Outgoing */}
+      <LinkList
+        icon={<CornerDownRight size={12} />}
+        label={`Links to (${out.length})`}
+        items={out}
+        onSelect={select}
+        empty="No outgoing links."
+      />
+
+      {/* Backlinks */}
+      <LinkList
+        icon={<CornerUpLeft size={12} />}
+        label={`Backlinks (${links.length})`}
+        items={links}
+        onSelect={select}
+        empty="No backlinks yet."
+      />
+    </div>
+  );
+}
+
+function LinkList({
+  icon,
+  label,
+  items,
+  onSelect,
+  empty,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  items: { id: string; title: string }[];
+  onSelect: (id: string) => void;
+  empty: string;
+}) {
+  return (
+    <div className="mt-5">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+        {icon} {label}
       </div>
+      {items.length === 0 ? (
+        <p className="text-[12px] text-ink-faint">{empty}</p>
+      ) : (
+        items.map((l) => (
+          <button
+            key={l.id}
+            onClick={() => onSelect(l.id)}
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12px] text-ink-muted transition hover:bg-canvas-hover hover:text-ink"
+          >
+            <Link2 size={13} className="text-ink-faint" />
+            {l.title}
+          </button>
+        ))
+      )}
     </div>
   );
 }

@@ -23,10 +23,12 @@ interface GNode {
  * same nodes/edges as the canvas. Clicking a node deep-links back to the board.
  */
 export function GraphView() {
-  const nodes = useStore((s) => s.nodes);
+  const allNodes = useStore((s) => s.nodes);
   const edges = useStore((s) => s.edges);
+  const currentBoardId = useStore((s) => s.currentBoardId);
   const select = useStore((s) => s.select);
   const router = useRouter();
+  const nodes = allNodes.filter((n) => n.boardId === currentBoardId);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 600 });
 
@@ -41,9 +43,12 @@ export function GraphView() {
   }, []);
 
   const data = useMemo(() => {
+    const ids = new Set(nodes.map((n) => n.id));
+    const boardEdges = edges.filter(
+      (e) => e.status !== "dismissed" && ids.has(e.source) && ids.has(e.target)
+    );
     const degree: Record<string, number> = {};
-    edges.forEach((e) => {
-      if (e.status === "dismissed") return;
+    boardEdges.forEach((e) => {
       degree[e.source] = (degree[e.source] || 0) + 1;
       degree[e.target] = (degree[e.target] || 0) + 1;
     });
@@ -54,10 +59,13 @@ export function GraphView() {
         color: NODE_TYPE_META[n.type].color,
         degree: degree[n.id] || 1,
       })),
-      links: edges
-        .filter((e) => e.status !== "dismissed")
-        .map((e) => ({ source: e.source, target: e.target, kind: e.kind })),
+      links: boardEdges.map((e) => ({
+        source: e.source,
+        target: e.target,
+        kind: e.kind,
+      })),
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes, edges]);
 
   return (
@@ -66,10 +74,12 @@ export function GraphView() {
         width={size.w}
         height={size.h}
         graphData={data}
-        backgroundColor="#0b0b0f"
+        backgroundColor="#050505"
         cooldownTicks={120}
         linkColor={(l: any) =>
-          l.kind === "ai_suggested" ? "rgba(255,108,166,0.5)" : "rgba(124,108,246,0.35)"
+          l.kind === "ai_suggested"
+            ? "rgba(185,167,255,0.55)"
+            : "rgba(255,255,255,0.18)"
         }
         linkWidth={(l: any) => (l.kind === "arrow" ? 1.6 : 1)}
         linkDirectionalParticles={0}

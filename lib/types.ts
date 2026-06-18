@@ -1,30 +1,54 @@
 /**
  * Domain types shared across the canvas, knowledge graph, search and AI layers.
  *
- * The canvas (tldraw) owns geometry; the semantic layer below is *projected*
- * from canvas shapes and is the source of truth for the graph view, search and
- * retrieval-augmented AI. See lib/projection.
+ * The canvas (tldraw) owns geometry; the semantic layer below is the source of
+ * truth for the graph view, search, tasks, dashboards and retrieval-augmented
+ * AI. Everything is a node (principle #2).
  */
 
-export type NodeType = "note" | "image" | "file" | "embed" | "link";
+export type NodeType =
+  | "note"
+  | "task"
+  | "project"
+  | "ai"
+  | "pdf"
+  | "image"
+  | "voice"
+  | "research"
+  | "link";
 
 export type EdgeKind = "arrow" | "wikilink" | "ai_suggested" | "reference";
+
+export type TaskStatus = "todo" | "doing" | "done";
+export type TaskPriority = "low" | "med" | "high";
 
 export interface SemanticNode {
   id: string;
   type: NodeType;
   title: string;
-  /** Markdown body for note nodes; caption / url for media nodes. */
+  /** Markdown body for notes; caption/url/transcript for media nodes. */
   content: string;
   tags: string[];
+  /** Which board (canvas) this node lives on. */
+  boardId: string;
+  /** Optional project membership. */
+  projectId?: string;
   /** Denormalized geometry mirrored from the canvas shape. */
   x: number;
   y: number;
   w: number;
   h: number;
-  /** Media payload (image url, embed src, link href). */
+  /** Media payload (image url, link href, file ref). */
   src?: string;
   color?: string;
+  /** Task fields (type === "task"). */
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  due?: string;
+  /** Research fields (type === "research"). */
+  sources?: { title: string; url?: string }[];
+  /** Cached AI summary (any node). */
+  summary?: string;
   updatedAt: string;
 }
 
@@ -48,6 +72,7 @@ export interface Board {
   id: string;
   title: string;
   icon?: string;
+  color?: string;
   updatedAt: string;
 }
 
@@ -71,8 +96,25 @@ export const NODE_TYPE_META: Record<
   // Restrained, desaturated category hues that match the monochrome palette
   // (see tailwind.config.ts `node.*` and ARCHITECTURE.md §14).
   note: { label: "Note", color: "#9aa0a6", colorVar: "node-note" },
+  task: { label: "Task", color: "#c7c7c7", colorVar: "node-task" },
+  project: { label: "Project", color: "#e0e0e0", colorVar: "node-project" },
+  ai: { label: "AI", color: "#b9a7ff", colorVar: "node-ai" },
+  pdf: { label: "PDF", color: "#e08f8f", colorVar: "node-pdf" },
   image: { label: "Image", color: "#8fb6e0", colorVar: "node-image" },
-  file: { label: "File", color: "#d6b48f", colorVar: "node-file" },
-  embed: { label: "Embed", color: "#c79ad0", colorVar: "node-embed" },
+  voice: { label: "Voice", color: "#8fd0c0", colorVar: "node-voice" },
+  research: { label: "Research", color: "#d6c393", colorVar: "node-research" },
   link: { label: "Link", color: "#a0a0a0", colorVar: "node-link" },
+};
+
+/** Default canvas footprint per node type. */
+export const NODE_DEFAULT_SIZE: Record<NodeType, { w: number; h: number }> = {
+  note: { w: 280, h: 180 },
+  task: { w: 260, h: 120 },
+  project: { w: 300, h: 180 },
+  ai: { w: 300, h: 220 },
+  pdf: { w: 280, h: 320 },
+  image: { w: 280, h: 200 },
+  voice: { w: 260, h: 130 },
+  research: { w: 300, h: 240 },
+  link: { w: 260, h: 110 },
 };

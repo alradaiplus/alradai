@@ -38,9 +38,16 @@ const overrides: TLUiOverrides = {};
 /** Ensures the canvas has exactly one tldraw shape per semantic node. */
 const StoreSync = track(function StoreSync() {
   const editor = useEditor();
-  const nodes = useStore((s) => s.nodes);
+  const allNodes = useStore((s) => s.nodes);
+  const currentBoardId = useStore((s) => s.currentBoardId);
+  const lastBoard = useRef<string | null>(null);
+
+  const nodes = allNodes.filter((n) => n.boardId === currentBoardId);
 
   useEffect(() => {
+    const boardChanged = lastBoard.current !== currentBoardId;
+    lastBoard.current = currentBoardId;
+
     const existing = new Set(
       editor
         .getCurrentPageShapes()
@@ -50,7 +57,7 @@ const StoreSync = track(function StoreSync() {
 
     const wanted = new Set(nodes.map((n) => n.id));
 
-    // Create shapes for new nodes.
+    // Create shapes for new nodes on this board.
     const toCreate = nodes
       .filter((n) => !existing.has(n.id))
       .map((n) => ({
@@ -62,13 +69,21 @@ const StoreSync = track(function StoreSync() {
       }));
     if (toCreate.length) editor.createShapes(toCreate);
 
-    // Remove shapes whose node was deleted.
+    // Remove shapes whose node was deleted or belongs to another board.
     const toDelete = editor
       .getCurrentPageShapes()
       .filter((s) => s.type === "node" && !wanted.has((s as NodeShape).props.nodeId))
       .map((s) => s.id);
     if (toDelete.length) editor.deleteShapes(toDelete);
-  }, [editor, nodes]);
+
+    if (boardChanged) {
+      requestAnimationFrame(() => {
+        if (editor.getCurrentPageShapes().length)
+          editor.zoomToFit({ animation: { duration: 200 } });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, allNodes, currentBoardId]);
 
   return null;
 });

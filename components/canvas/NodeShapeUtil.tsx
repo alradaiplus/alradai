@@ -36,7 +36,17 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
     w: T.number,
     h: T.number,
     nodeId: T.string,
-    nodeType: T.literalEnum("note", "image", "file", "embed", "link"),
+    nodeType: T.literalEnum(
+      "note",
+      "task",
+      "project",
+      "ai",
+      "pdf",
+      "image",
+      "voice",
+      "research",
+      "link"
+    ),
   };
 
   getDefaultProps(): NodeShape["props"] {
@@ -80,7 +90,7 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
   }
 
   indicator(shape: NodeShape) {
-    const color = NODE_TYPE_META[shape.props.nodeType]?.color ?? "#7c6cf6";
+    const color = NODE_TYPE_META[shape.props.nodeType]?.color ?? "#f5f5f5";
     return (
       <rect
         width={shape.props.w}
