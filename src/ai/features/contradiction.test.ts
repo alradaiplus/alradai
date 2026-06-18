@@ -4,21 +4,21 @@ import { buildLineage } from './contradiction';
 import type { Memory } from '@/src/core/memory/types';
 
 function mem(partial: Partial<Memory> & { id: string }): Memory {
+  const { id, ...rest } = partial;
   return {
-    id: partial.id,
-    tier: 'position',
-    subject: 'back-emf',
-    subjectLabel: 'back-EMF',
-    statement: partial.statement ?? 'placeholder',
-    confidence: 0.7,
-    evidenceCount: 1,
-    sourceBlockIds: partial.sourceBlockIds ?? ['B1'],
-    createdAt: partial.createdAt ?? 0,
-    updatedAt: partial.updatedAt ?? 0,
-    supersededBy: partial.supersededBy ?? null,
-    archivedAt: null,
-    isHead: partial.isHead ?? 1,
-    ...partial,
+    id,
+    tier: rest.tier ?? 'position',
+    subject: rest.subject ?? 'back-emf',
+    subjectLabel: rest.subjectLabel ?? 'back-EMF',
+    statement: rest.statement ?? 'placeholder',
+    confidence: rest.confidence ?? 0.7,
+    evidenceCount: rest.evidenceCount ?? 1,
+    sourceBlockIds: rest.sourceBlockIds ?? ['B1'],
+    createdAt: rest.createdAt ?? 0,
+    updatedAt: rest.updatedAt ?? 0,
+    supersededBy: rest.supersededBy ?? null,
+    archivedAt: rest.archivedAt ?? null,
+    isHead: rest.isHead ?? 1,
   };
 }
 
