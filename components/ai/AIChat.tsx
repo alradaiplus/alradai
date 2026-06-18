@@ -5,6 +5,14 @@ import { useStore } from "@/lib/store";
 import type { ChatMessage } from "@/lib/types";
 import { Sparkles, ArrowUp, FileText } from "lucide-react";
 import { nanoid } from "nanoid";
+import { retrieve, citationsOf, fallbackAnswer } from "@/lib/ai/demo";
+
+/**
+ * In a static export (e.g. GitHub Pages) there is no server route to call, so
+ * the assistant answers entirely in the browser using the same grounded
+ * keyword retrieval the server uses in demo mode.
+ */
+const STATIC_EXPORT = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
 
 /**
  * AI assistant grounded in the current board. Streams answers from the
@@ -31,6 +39,36 @@ export function AIChat() {
     ]);
     setInput("");
     setBusy(true);
+
+    // Static-export (GitHub Pages) path: no server, answer in the browser.
+    if (STATIC_EXPORT) {
+      try {
+        const ctx = nodes.map((n) => ({
+          id: n.id,
+          title: n.title,
+          content: n.content,
+          tags: n.tags,
+        }));
+        const hits = retrieve(q, ctx);
+        const citations = citationsOf(hits);
+        const full = fallbackAnswer(hits);
+        const words = full.split(/(\s+)/);
+        let acc = "";
+        for (const w of words) {
+          acc += w;
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === assistantId ? { ...msg, content: acc, citations } : msg
+            )
+          );
+          scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+          await new Promise((r) => setTimeout(r, 12));
+        }
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
 
     try {
       const res = await fetch("/api/ai/chat", {
