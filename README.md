@@ -1,147 +1,125 @@
-# Notes Canvas
+# Notes Canvas — Your Visual Second Brain
 
-> Notes Canvas captures every thought, links them automatically, and tells
-> you what you were really thinking about.
+> All your knowledge. One infinite canvas.
 
-A second brain for high-performance people. Carbon-black, Apple-restraint,
-Linear-speed. Built to the v1 spec — nothing more.
+Notes Canvas is a visual second brain: an **infinite canvas** of free-positioned
+note / image / file / embed nodes, connected into a **knowledge graph**, with
+**AI that understands you** — answers grounded in your own notes, with citations
+that link back to the canvas.
 
-## What ships in v1
+This repository is a faithful recreation (V1) of the product, built on a
+production-grade foundation that scales to the V2 roadmap below.
 
-- **Today** — Morning Paragraph, three Commitments, today's writing
-  surface, Recall column.
-- **Capture Overlay** — `⌘⇧Space` from anywhere. Files to Inbox in
-  one keystroke.
-- **Inbox** — keyboard-first triage (`J`/`K` move, `F` file, `E`
-  archive).
-- **Canvas** — query DSL (`tag:` `is:` `before:` `after:` + text)
-  with saved-query sidebar and list view.
-- **Command Bar** — `⌘K` global. Blocks · Tags · Commands tabs.
-- **Block Editor** — sheet, backlinks, autosave.
-- **Settings** — OpenRouter BYO-key, per-feature model selection,
-  temperature, reasoning level, monthly cap.
-- **Recall agent** — on-device lexical embeddings, no key required,
-  no network.
-- **Nightly Synthesis** — once-per-day, opens with the agent's
-  paragraph the next morning.
+![Notes Canvas](public/icon.svg)
 
-Not shipped in v1 (per spec): Spatial Boards, Contradiction
-detection, Thread discovery, Apple Watch, mobile native, Yjs sync.
+## Features (V1)
+
+- **Infinite canvas** (tldraw) — pan / zoom, grid, free node placement, marquee
+  multi-select, resize handles, per-node context menu, z-order.
+- **Five node types** — note (markdown), image, file, embed/3D, link — rendered
+  as custom canvas shapes.
+- **Knowledge graph** — curved connectors on the canvas, plus a dedicated
+  force-directed **Graph view** derived from the same data. Click a graph node to
+  jump to it on the canvas.
+- **AI assistant** — streaming chat grounded in your notes (RAG) with clickable
+  citations. Routed through **OpenRouter → Claude**, with multi-key rotation and
+  model fallback. Works in a graceful local-fallback mode with no keys.
+- **Inspector** — edit title / body / tags, see **backlinks** and accept/dismiss
+  **AI-suggested links**.
+- **Wikilinks** — Obsidian-style `[[Title]]`, `[[Title|alias]]`, `[[Title#heading]]`.
+- **Command palette** (⌘K) — hybrid search (full-text + semantic) over notes plus
+  quick actions.
+- **Mobile** — fullscreen touch canvas, select/pan toggle, floating actions and a
+  bottom sheet that hosts Details / AI.
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 14 (App Router) + TypeScript |
+| Canvas | [tldraw](https://tldraw.dev) v3 with custom node shapes + connector overlay |
+| Graph | react-force-graph-2d |
+| State | Zustand (persisted) — the shared semantic store |
+| Backend | Supabase (Postgres + pgvector, Auth, Storage, Realtime, Edge Functions) |
+| AI | OpenRouter → Claude (streaming) · Supabase `gte-small` embeddings (384-dim) |
+| Styling | Tailwind CSS |
+
+## Getting started
+
+```bash
+npm install
+cp .env.example .env.local   # optional — app runs in demo mode without it
+npm run dev                  # http://localhost:3000  (app at /app)
+```
+
+The app runs **fully in demo mode** with no backend: seeded content lives in a
+persisted client store, and the AI panel returns grounded fallback answers. Add
+the env below to enable the production backend and Claude-powered AI.
+
+### Environment
+
+See [`.env.example`](.env.example). Keys:
+
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENROUTER_API_KEY_1` / `_2` / `_3` (rotated on rate-limit / quota errors)
+- `OPENROUTER_MODEL_PRIMARY`, `OPENROUTER_MODEL_FALLBACK`
+
+> ⚠️ **Never commit secrets.** `.env.local` is gitignored. If a key is ever
+> exposed, rotate it at <https://openrouter.ai/keys>.
+
+### Supabase backend
+
+```bash
+supabase start                      # local stack
+supabase db push                    # apply migrations/0001_init.sql
+supabase functions deploy embed     # gte-small embedding function
+```
+
+The schema (`supabase/migrations/0001_init.sql`) covers workspaces, boards,
+nodes, edges, tags, files, embeddings and AI threads, with **Row Level Security**
+on every table and an RRF **`hybrid_search`** function (FTS + pgvector).
 
 ## Architecture
 
+- **Canvas owns geometry.** tldraw is the source of truth for the board
+  (snapshot autosave in V1; Yjs CRDT in V2).
+- **Semantic layer is projected.** Nodes / edges / tags / embeddings are derived
+  from canvas shapes (one-way projection keyed by a stable `nodeId`) and power
+  the graph view, search and AI. In demo mode the client store
+  (`lib/store.ts`) stands in for this layer.
+- **Connectors** render in page space via tldraw's `OnTheCanvas` component so
+  they pan/zoom and follow nodes live (`components/canvas/Edges.tsx`).
+- **RAG** retrieves relevant nodes, builds context, and streams a Claude answer
+  with citations (`app/api/ai/chat/route.ts`, `lib/ai/*`).
+
 ```
-app/                     Next.js 14 entrypoint (mounts <Shell/>)
-src/
-  core/                  Pure TS — no DOM, no React
-    types.ts             Block, Board, Commitment, Settings
-    db.ts                Dexie/IndexedDB schema + queries
-    query.ts             Query DSL parser
-    ids.ts               ULID
-    text.ts              tokenize, tags, links, excerpt
-    time.ts              date helpers
-    tauri.ts             Tauri runtime bridge (no-op on web)
-  ai/
-    provider.ts          Provider interface
-    openrouter.ts        OpenRouter driver (v1 default)
-    embeddings.ts        On-device lexical embeddings
-    queue.ts             AgentQueue: dedupe + cost guard
-    features/
-      recall.ts          Surface relevant past blocks
-      synthesis.ts       Nightly paragraph
-  store/                 Zustand stores
-  hooks/                 useHotkey, useDebounced, useAutosize
-  components/
-    shell/               Shell, Header, FAB, Toaster
-    primitives/          Icon, Button, IconButton, Sheet, TagChip, KeyHint
-    surfaces/            TodaySurface, CanvasSurface, InboxSurface
-    today/               MorningParagraph, Commitments, TodayEditor, RecallColumn
-    canvas/              BlockRow
-    inbox/               InboxCard
-    overlays/            CaptureOverlay, CommandBar, SettingsSheet, BlockEditorSheet
-  styles/                tokens.css, components.css
-src-tauri/               Tauri 2 desktop wrap
-  src/main.rs            Shell — registers ⌘⇧Space, emits nc:capture
-  tauri.conf.json
-  Cargo.toml
-  capabilities/main.json
+app/            routes: / (landing), /app (canvas), /app/graph, /api/ai/chat
+components/      canvas/ shell/ ai/ graph/ brand/ ui/
+lib/            store, types, ai/, projection/, supabase/
+supabase/       migrations/, functions/embed, config.toml
 ```
 
-## Run on the web
+## Scripts
 
 ```bash
-npm install
-npm run dev
-# open http://localhost:3000
+npm run dev        # dev server
+npm run build      # production build
+npm run typecheck  # tsc --noEmit
+npm run lint       # next lint
+npm test           # vitest (projection + chunking)
 ```
 
-First launch opens Settings. Paste your **OpenRouter** key and test it.
-Recall works without a key (on-device). Synthesis needs one.
+## V2 roadmap (production hardening)
 
-## Run on desktop (Tauri 2)
+- **Multiplayer** — Yjs CRDT over a custom Supabase Realtime provider; live
+  cursors; offline merge.
+- **Scale** — viewport culling, worker-driven graph, virtualized lists, lazy
+  signed-URL images for 1000s of nodes.
+- **AI depth** — background auto-linking (pgvector kNN), auto-tagging,
+  summarization, graph-aware retrieval.
+- **Security & ops** — full RLS/pgTAP audit, rate limiting, Sentry, e2e
+  (Playwright incl. realtime + mobile gestures).
 
-Requires Rust toolchain.
+---
 
-```bash
-npm install
-cargo install tauri-cli --version "^2.0"
-cargo tauri dev
-```
-
-The desktop shell registers `⌘⇧Space` (or `Ctrl+Shift+Space` on Linux)
-globally and routes it through `window.__TAURI__.event` into the same
-React Capture Overlay.
-
-## Run on mobile
-
-v1 is responsive web. The same `/` URL collapses to a single column
-under 720 px and exposes Today, Canvas, and Inbox via the header.
-Native React Native app is queued for v2 — see [MOBILE.md](./MOBILE.md).
-
-## Keyboard
-
-| Shortcut | Action |
-|---|---|
-| `⌘K` | Command bar |
-| `⌘,` | Settings sheet |
-| `⌘⇧Space` | Capture overlay |
-| `⌘1` / `⌘2` / `⌘3` | Switch to Today / Canvas / Inbox |
-| `⌘↵` | End block (Today editor) |
-| `⌘1..3` (in editor) | Toggle Commitment 1/2/3 |
-| `J` / `K` | Move focus in Inbox |
-| `F` | File focused Inbox card |
-| `E` | Archive focused Inbox card |
-| `Esc` | Dismiss overlay |
-
-## AI providers
-
-v1 ships **OpenRouter only** because one key unlocks every model. The
-provider abstraction in `src/ai/provider.ts` is ready for OpenAI,
-Anthropic, Gemini, and local (Ollama) drivers — those are wired in v2.
-
-Keys live in IndexedDB on the web build and never leave the device.
-Under Tauri, v2 migrates them to OS Keychain via Stronghold. No key
-is ever embedded in the bundle.
-
-## Performance
-
-See [PERFORMANCE.md](./PERFORMANCE.md). v1 SLOs:
-
-- Cold start → Today: **< 300 ms**
-- Capture open → cursor: **< 200 ms**
-- ⌘K Blocks search p95 (50k blocks): **< 50 ms**
-- Today re-render on caret: **< 16 ms**
-
-## Roadmap
-
-- **v1 (now)** — this README.
-- **v2** — Spatial Boards (AI-arranged + manual), Contradiction
-  Detection, Thread Discovery, OpenAI/Anthropic/Gemini drivers, native
-  iOS app, Yjs CRDT sync, native SQLite.
-- **v3** — Local model driver, web app over WebCrypto, voice answers
-  via AirPods, continuous (not just nightly) synthesis, shared boards.
-
-## Philosophy
-
-One atom: **Block**. Two surfaces: **Today** + **Canvas**. One
-**Inbox**. One **Command Bar**. One **Ambient Agent**. Nothing else.
+Built as a faithful recreation of the Notes Canvas product.

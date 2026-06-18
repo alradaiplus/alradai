@@ -1,34 +1,49 @@
-import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
-
-import './globals.css';
+import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import "./globals.css";
 
 const inter = Inter({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-inter',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: 'Notes Canvas',
+  title: "Notes Canvas — Your Visual Second Brain",
   description:
-    'Notes Canvas captures every thought, links them automatically, and tells you what you were really thinking about.',
+    "All your knowledge. One infinite canvas. Notes Canvas is a visual second brain with an infinite canvas, a knowledge graph, and AI that understands you.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  ),
+  openGraph: {
+    title: "Notes Canvas — Your Visual Second Brain",
+    description: "All your knowledge. One infinite canvas.",
+    type: "website",
+  },
+  icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0E0E0E',
-  width: 'device-width',
+  themeColor: "#0b0b0f",
+  width: "device-width",
   initialScale: 1,
-  // viewportFit:cover gives us safe-area insets on notched devices.
-  // env(safe-area-inset-*) is consumed by tokens.css fallbacks.
-  viewportFit: 'cover',
+  maximumScale: 1,
+  userScalable: false,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body>{children}</body>
+    <html lang="en" className={`${inter.variable} ${mono.variable} dark`}>
+      <body className="font-sans">{children}</body>
     </html>
   );
 }
