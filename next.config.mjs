@@ -1,19 +1,14 @@
-import createNextIntlPlugin from 'next-intl/plugin';
-
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
-      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
-  experimental: {
-    optimizePackageImports: ['framer-motion', 'lucide-react'],
-  },
+  // tldraw and react-force-graph ship ESM that benefits from transpilation
+  transpilePackages: ["react-force-graph-2d", "force-graph"],
 };
 
-export default withNextIntl(nextConfig);
+export default nextConfig;

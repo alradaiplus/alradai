@@ -1,36 +1,41 @@
 {
-  "name": "pyb3dcp",
+  "name": "notes-canvas",
   "version": "0.1.0",
   "private": true,
-  "description": "PYB3DCP — Print Your Building. First Yemeni company specialized in 3D concrete printing.",
+  "description": "Notes Canvas — Your Visual Second Brain. An infinite-canvas knowledge-graph note app with AI that understands you.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@studio-freight/lenis": "^1.0.42",
-    "@tsparticles/engine": "^3.5.0",
-    "@tsparticles/react": "^3.0.0",
-    "@tsparticles/slim": "^3.5.0",
-    "framer-motion": "^11.3.0",
-    "lucide-react": "^0.400.0",
-    "next": "14.2.5",
-    "next-intl": "^3.17.0",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.0.0",
+    "lucide-react": "^0.445.0",
+    "nanoid": "^5.0.7",
+    "next": "^14.2.35",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-force-graph-2d": "^1.25.5",
+    "tailwind-merge": "^2.5.2",
+    "tldraw": "^3.4.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
-    "@types/react": "^18.3.3",
+    "@types/node": "^20.16.10",
+    "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.19",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.5",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4",
-    "typescript": "^5.5.3"
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.2"
   }
 }

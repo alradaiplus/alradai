@@ -2,311 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --ink: 10 10 10;
-    --gold: 212 168 67;
-    --gold-soft: 245 233 194;
-    --line: 255 255 255;
-  }
-
-  html {
-    -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
-  }
-
-  html.lenis {
-    height: auto;
-  }
-
-  .lenis.lenis-smooth {
-    scroll-behavior: auto !important;
-  }
-
-  .lenis.lenis-smooth [data-lenis-prevent] {
-    overscroll-behavior: contain;
-  }
-
-  .lenis.lenis-stopped {
-    overflow: hidden;
-  }
-
-  body {
-    background-color: #0a0a0a;
-    color: #f5f5f5;
-    font-feature-settings: 'cv11', 'ss01';
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    overflow-x: hidden;
-  }
-
-  [dir='rtl'] body {
-    font-family: var(--font-cairo), system-ui, sans-serif;
-  }
-
-  [dir='ltr'] body {
-    font-family: var(--font-space), system-ui, sans-serif;
-  }
-
-  ::selection {
-    background-color: rgba(212, 168, 67, 0.35);
-    color: #fff;
-  }
-
-  :focus-visible {
-    outline: 2px solid rgba(212, 168, 67, 0.8);
-    outline-offset: 3px;
-    border-radius: 6px;
-  }
+:root {
+  color-scheme: dark;
 }
 
-@layer components {
-  /* Persistent black + gold grid background sitting behind every section */
-  .persistent-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background-color: #0a0a0a;
-    background-image:
-      linear-gradient(45deg, rgba(212, 168, 67, 0.035) 1px, transparent 1px),
-      linear-gradient(-45deg, rgba(212, 168, 67, 0.035) 1px, transparent 1px);
-    background-size: 64px 64px;
-  }
+html,
+body {
+  height: 100%;
+}
 
-  .persistent-bg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      ellipse at 50% 25%,
-      rgba(212, 168, 67, 0.08) 0%,
-      transparent 60%
-    );
-  }
+body {
+  background: #0b0b0f;
+  color: #ededf2;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
 
-  .persistent-bg::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-    opacity: 0.03;
-    mix-blend-mode: overlay;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a33 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #2a2a33;
+  border-radius: 999px;
+}
 
-  /* Glass card primitive */
+/* --- tldraw theming: blend the canvas into the app shell ----------------- */
+.tl-container {
+  --color-background: #0e0e13;
+  background-color: #0e0e13 !important;
+}
+.tl-background {
+  background-color: #0e0e13 !important;
+}
+/* Soften the grid to match the product look */
+.tl-grid {
+  opacity: 0.5;
+}
+/* Accent the selection to match the brand */
+.tlui-button {
+  color: inherit;
+}
+
+/* Hide tldraw watermark gracefully in dev (respect license in production) */
+.tl-watermark_SEE-LICENSE {
+  opacity: 0.25;
+}
+
+@layer utilities {
   .glass {
-    background: rgba(14, 14, 14, 0.58);
-    backdrop-filter: blur(22px) saturate(160%);
-    -webkit-backdrop-filter: blur(22px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
-  }
-
-  .glass-hover {
-    transition:
-      transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-      border-color 0.35s ease,
-      box-shadow 0.35s ease;
-  }
-
-  .glass-hover:hover {
-    transform: translateY(-4px);
-    border-color: rgba(212, 168, 67, 0.35);
-    box-shadow:
-      0 10px 40px 0 rgba(0, 0, 0, 0.55),
-      0 0 0 1px rgba(212, 168, 67, 0.2),
-      0 0 40px -8px rgba(212, 168, 67, 0.35);
-  }
-
-  .section-shell {
-    position: relative;
-    z-index: 1;
-    margin: 0 auto;
-    max-width: 1280px;
-    padding: clamp(56px, 8vw, 112px) clamp(20px, 4vw, 48px);
-  }
-
-  /* Eyebrow label above section titles */
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.75rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgba(212, 168, 67, 0.9);
-  }
-
-  .eyebrow::before {
-    content: '';
-    display: block;
-    width: 32px;
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      rgba(212, 168, 67, 0.8),
-      rgba(212, 168, 67, 0)
-    );
-  }
-
-  [dir='rtl'] .eyebrow::before {
-    background: linear-gradient(
-      to left,
-      rgba(212, 168, 67, 0.8),
-      rgba(212, 168, 67, 0)
-    );
-  }
-
-  /* Headline scale + treatment */
-  .display {
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
-    font-size: clamp(2rem, 6vw, 4.25rem);
-  }
-
-  .display-lg {
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    line-height: 1;
-    font-size: clamp(2.5rem, 8vw, 5.5rem);
-  }
-
-  /* Gold text gradient */
-  .text-gold-gradient {
-    background-image: linear-gradient(
-      135deg,
-      #f5e9c2 0%,
-      #d4a843 50%,
-      #b88a2c 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* Primary gold CTA */
-  .btn-gold {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 14px 28px;
-    border-radius: 999px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    color: #0a0a0a;
-    background-image: linear-gradient(135deg, #f5e9c2 0%, #d4a843 50%, #b88a2c 100%);
-    box-shadow:
-      0 10px 30px -10px rgba(212, 168, 67, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .btn-gold:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 16px 40px -10px rgba(212, 168, 67, 0.75),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  }
-
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 14px 28px;
-    border-radius: 999px;
-    font-weight: 500;
-    color: #f5f5f5;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(18, 18, 24, 0.72);
     backdrop-filter: blur(12px);
-    transition: all 0.25s ease;
   }
-
-  .btn-ghost:hover {
-    border-color: rgba(212, 168, 67, 0.55);
-    color: #f5e9c2;
-    background: rgba(212, 168, 67, 0.06);
-  }
-
-  /* Rotating gold gradient border (for CTA card) */
-  .gold-ring {
-    position: relative;
-    border-radius: 28px;
-    padding: 2px;
-    background: conic-gradient(
-      from 0deg,
-      rgba(212, 168, 67, 0) 0deg,
-      rgba(212, 168, 67, 0.9) 80deg,
-      rgba(245, 233, 194, 1) 180deg,
-      rgba(212, 168, 67, 0.9) 260deg,
-      rgba(212, 168, 67, 0) 360deg
-    );
-    animation: gold-ring-spin 8s linear infinite;
-  }
-
-  .gold-ring > * {
-    animation: gold-ring-spin-reverse 8s linear infinite;
-  }
-
-  @keyframes gold-ring-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @keyframes gold-ring-spin-reverse {
-    to {
-      transform: rotate(-360deg);
-    }
-  }
-
-  /* Hide scrollbars on draggable rails */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-
-  /* Draw-in SVG path animation */
-  .draw-path {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    pathLength: 1;
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .text-pretty {
-    text-wrap: pretty;
-  }
-
-  .mask-fade-edges {
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 8%,
-      black 92%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 8%,
-      black 92%,
-      transparent 100%
-    );
   }
 }
