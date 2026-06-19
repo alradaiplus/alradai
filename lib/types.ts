@@ -63,6 +63,7 @@ export interface SemanticNode {
   habitLog?: string[];
   cadence?: "daily" | "weekly";
   category?: string;
+  goal?: string;
   /** Cached AI summary (any node). */
   summary?: string;
   updatedAt: string;
