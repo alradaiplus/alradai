@@ -46,6 +46,7 @@ export function Inspector() {
   const connectSourceId = useStore((s) => s.connectSourceId);
   const summarize = useStore((s) => s.summarizeNode);
   const aiKey = useStore((s) => s.aiKey);
+  const aiModel = useStore((s) => s.aiModel);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiOut, setAiOut] = useState<{ kind: "extend" | "critique"; text: string } | null>(
     null
@@ -90,6 +91,7 @@ export function Inspector() {
       let acc = "";
       for await (const d of streamOpenRouterClient({
         apiKey: aiKey,
+        model: aiModel,
         maxTokens: 600,
         messages: [
           { role: "system", content: "You are Notes Canvas, the user's writing copilot." },
@@ -118,6 +120,7 @@ export function Inspector() {
       let acc = "";
       for await (const d of streamOpenRouterClient({
         apiKey: aiKey,
+        model: aiModel,
         maxTokens: 400,
         messages: [
           { role: "system", content: "You break work into concrete, actionable tasks." },

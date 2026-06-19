@@ -16,10 +16,13 @@ import {
   Hash,
   CalendarDays,
   Table2,
+  LayoutDashboard,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
+  { href: "/app/home", label: "Home", icon: LayoutDashboard },
   { href: "/app", label: "Canvas", icon: Home },
   { href: "/app/database", label: "Database", icon: Table2 },
   { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
@@ -101,7 +104,7 @@ export function LeftRail() {
 
       <div className="mt-5 flex items-center justify-between px-4 py-1">
         <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-          <FolderKanban size={13} /> Boards
+          <FolderKanban size={13} /> Spaces
         </span>
         <button
           onClick={() => {
@@ -109,7 +112,7 @@ export function LeftRail() {
             router.push("/app");
           }}
           className="text-ink-faint hover:text-ink"
-          title="New board"
+          title="New space"
         >
           <Plus size={14} />
         </button>
@@ -151,6 +154,12 @@ export function LeftRail() {
         >
           <Sparkles size={16} /> Workspace AI
         </button>
+        <Link
+          href="/app/settings"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-ink-muted transition hover:bg-canvas-hover hover:text-ink"
+        >
+          <Settings size={16} /> Settings
+        </Link>
       </div>
     </aside>
   );

@@ -34,6 +34,7 @@ export function AIChat() {
   const select = useStore((s) => s.select);
   const aiKey = useStore((s) => s.aiKey);
   const setAiKey = useStore((s) => s.setAiKey);
+  const aiModel = useStore((s) => s.aiModel);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -86,6 +87,7 @@ export function AIChat() {
           let acc = "";
           for await (const delta of streamOpenRouterClient({
             apiKey: aiKey,
+            model: aiModel,
             messages: chat,
           })) {
             acc += delta;

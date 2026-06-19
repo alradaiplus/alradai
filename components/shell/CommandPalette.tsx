@@ -182,7 +182,25 @@ export function CommandPalette() {
               }}
               icon={<Plus size={15} />}
             >
-              New board
+              New space
+            </Item>
+            <Item
+              onSelect={() => {
+                router.push("/app/home");
+                setOpen(false);
+              }}
+              icon={<Home size={15} />}
+            >
+              Open Home
+            </Item>
+            <Item
+              onSelect={() => {
+                router.push("/app/settings");
+                setOpen(false);
+              }}
+              icon={<Layers size={15} />}
+            >
+              Open Settings
             </Item>
             <Item
               onSelect={() => {

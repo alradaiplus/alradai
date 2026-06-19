@@ -37,6 +37,10 @@ interface AppState {
   connectSourceId: string | null;
   /** User's OpenRouter key — browser-only (never committed), enables real AI. */
   aiKey: string | null;
+  /** Preferred OpenRouter model id (used by client AI calls). */
+  aiModel: string;
+  /** Display name shown in the shell / dashboard. */
+  userName: string;
 
   // ---- UI ----
   select: (id: string | null) => void;
@@ -45,6 +49,9 @@ interface AppState {
   toggleLeftRail: (open?: boolean) => void;
   setCommandOpen: (open: boolean) => void;
   setAiKey: (key: string | null) => void;
+  setAiModel: (model: string) => void;
+  setUserName: (name: string) => void;
+  exportWorkspace: () => string;
 
   // ---- Boards ----
   addBoard: (title?: string) => Board;
@@ -154,6 +161,8 @@ export const useStore = create<AppState>()(
       commandOpen: false,
       connectSourceId: null,
       aiKey: null,
+      aiModel: "anthropic/claude-3.5-sonnet",
+      userName: "You",
 
       // ---- UI ----
       select: (id) =>
@@ -168,6 +177,16 @@ export const useStore = create<AppState>()(
         set((s) => ({ leftRailOpen: open ?? !s.leftRailOpen })),
       setCommandOpen: (open) => set({ commandOpen: open }),
       setAiKey: (key) => set({ aiKey: key && key.trim() ? key.trim() : null }),
+      setAiModel: (model) => set({ aiModel: model || "anthropic/claude-3.5-sonnet" }),
+      setUserName: (name) => set({ userName: name.trim() || "You" }),
+      exportWorkspace: () => {
+        const s = get();
+        return JSON.stringify(
+          { boards: s.boards, nodes: s.nodes, edges: s.edges },
+          null,
+          2
+        );
+      },
 
       // ---- Boards ----
       addBoard: (title) => {
@@ -441,6 +460,8 @@ export const useStore = create<AppState>()(
         nodes: s.nodes,
         edges: s.edges,
         aiKey: s.aiKey,
+        aiModel: s.aiModel,
+        userName: s.userName,
       }),
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<AppState>;
