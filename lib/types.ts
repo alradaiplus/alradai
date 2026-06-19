@@ -15,7 +15,17 @@ export type NodeType =
   | "image"
   | "voice"
   | "research"
-  | "link";
+  | "link"
+  // Phase 6 — remaining node types
+  | "folder"
+  | "video"
+  | "code"
+  | "whiteboard"
+  | "mindmap"
+  | "bookmark"
+  | "event"
+  | "workflow"
+  | "embed";
 
 export type EdgeKind = "arrow" | "wikilink" | "ai_suggested" | "reference";
 
@@ -104,6 +114,15 @@ export const NODE_TYPE_META: Record<
   voice: { label: "Voice", color: "#8fd0c0", colorVar: "node-voice" },
   research: { label: "Research", color: "#d6c393", colorVar: "node-research" },
   link: { label: "Link", color: "#a0a0a0", colorVar: "node-link" },
+  folder: { label: "Folder", color: "#c7c7c7", colorVar: "node-project" },
+  video: { label: "Video", color: "#d99a9a", colorVar: "node-pdf" },
+  code: { label: "Code", color: "#93c7b0", colorVar: "node-voice" },
+  whiteboard: { label: "Whiteboard", color: "#c0c0c0", colorVar: "node-project" },
+  mindmap: { label: "Mind Map", color: "#c0a7e0", colorVar: "node-ai" },
+  bookmark: { label: "Bookmark", color: "#d6b48f", colorVar: "node-research" },
+  event: { label: "Event", color: "#9ab6e0", colorVar: "node-image" },
+  workflow: { label: "Workflow", color: "#a7b9ff", colorVar: "node-ai" },
+  embed: { label: "Embed", color: "#a0a0a0", colorVar: "node-link" },
 };
 
 /** Default canvas footprint per node type. */
@@ -117,4 +136,13 @@ export const NODE_DEFAULT_SIZE: Record<NodeType, { w: number; h: number }> = {
   voice: { w: 260, h: 130 },
   research: { w: 300, h: 240 },
   link: { w: 260, h: 110 },
+  folder: { w: 240, h: 130 },
+  video: { w: 300, h: 200 },
+  code: { w: 320, h: 200 },
+  whiteboard: { w: 300, h: 200 },
+  mindmap: { w: 300, h: 200 },
+  bookmark: { w: 260, h: 120 },
+  event: { w: 260, h: 130 },
+  workflow: { w: 300, h: 180 },
+  embed: { w: 300, h: 200 },
 };

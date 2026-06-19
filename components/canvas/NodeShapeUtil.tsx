@@ -45,7 +45,16 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
       "image",
       "voice",
       "research",
-      "link"
+      "link",
+      "folder",
+      "video",
+      "code",
+      "whiteboard",
+      "mindmap",
+      "bookmark",
+      "event",
+      "workflow",
+      "embed"
     ),
   };
 

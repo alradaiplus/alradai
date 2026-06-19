@@ -189,7 +189,12 @@ export function Inspector() {
       )}
 
       {/* Media source */}
-      {(node.type === "link" || node.type === "image" || node.type === "pdf") && (
+      {(node.type === "link" ||
+        node.type === "image" ||
+        node.type === "pdf" ||
+        node.type === "video" ||
+        node.type === "bookmark" ||
+        node.type === "embed") && (
         <input
           value={node.src ?? ""}
           onChange={(e) => update(node.id, { src: e.target.value })}

@@ -14,6 +14,16 @@ import {
   Image as ImageIcon,
   Mic,
   Telescope,
+  Folder,
+  Video,
+  Code2,
+  PenTool,
+  Network,
+  Bookmark,
+  CalendarClock,
+  Workflow,
+  AppWindow,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import { MarkdownLite } from "@/components/ui/MarkdownLite";
@@ -28,6 +38,15 @@ const ICONS: Record<NodeType, LucideIcon> = {
   voice: Mic,
   research: Telescope,
   link: Link2,
+  folder: Folder,
+  video: Video,
+  code: Code2,
+  whiteboard: PenTool,
+  mindmap: Network,
+  bookmark: Bookmark,
+  event: CalendarClock,
+  workflow: Workflow,
+  embed: AppWindow,
 };
 
 /**
@@ -127,11 +146,78 @@ function Body({ node, metaColor }: { node: SemanticNode; metaColor: string }) {
     );
   }
 
-  if (node.type === "link") {
+  if (node.type === "link" || node.type === "bookmark" || node.type === "embed") {
     return (
       <div className="flex min-h-0 flex-1 flex-col justify-center px-3 pb-2">
         <p className="line-clamp-2 text-[12px] text-ink-muted">{node.content}</p>
-        <span className="mt-1 truncate text-[11px] text-node-link">{node.src}</span>
+        {node.src && (
+          <span className="mt-1 truncate text-[11px] text-node-link">{node.src}</span>
+        )}
+      </div>
+    );
+  }
+
+  if (node.type === "code") {
+    return (
+      <div className="min-h-0 flex-1 overflow-hidden px-3 pb-2">
+        <pre className="h-full overflow-auto rounded-md border border-canvas-border bg-canvas-bg p-2 font-mono text-[11px] leading-snug text-ink-muted">
+          {node.content || "// code"}
+        </pre>
+      </div>
+    );
+  }
+
+  if (node.type === "video") {
+    return (
+      <div className="min-h-0 flex-1 overflow-hidden bg-canvas-bg">
+        {node.src && /\.(png|jpe?g|webp|gif)$/i.test(node.src) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={node.src} alt={node.title} className="h-full w-full object-cover" draggable={false} />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Play size={26} style={{ color: metaColor }} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (node.type === "event") {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col px-3 pb-2 text-[12px] text-ink-muted">
+        {node.due && (
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] text-ink">
+            <CalendarClock size={12} style={{ color: metaColor }} />
+            {new Date(node.due).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </div>
+        )}
+        <p className="line-clamp-3">{node.content}</p>
+      </div>
+    );
+  }
+
+  if (node.type === "whiteboard" || node.type === "mindmap" || node.type === "workflow") {
+    const Icon = node.type === "mindmap" ? Network : node.type === "workflow" ? Workflow : PenTool;
+    return (
+      <div className="flex min-h-0 flex-1 flex-col px-3 pb-2">
+        <div className="mb-2 flex flex-1 items-center justify-center rounded-lg border border-dashed border-canvas-border bg-canvas-bg">
+          <Icon size={26} style={{ color: metaColor }} />
+        </div>
+        <p className="line-clamp-2 text-[11px] text-ink-faint">{node.content}</p>
+      </div>
+    );
+  }
+
+  if (node.type === "folder") {
+    return (
+      <div className="flex min-h-0 flex-1 items-center gap-2 px-3 pb-2 text-[12px] text-ink-muted">
+        <Folder size={18} style={{ color: metaColor }} />
+        <p className="line-clamp-2">{node.content || "Empty folder"}</p>
       </div>
     );
   }

@@ -21,6 +21,15 @@ import {
   Plus,
   Wand2,
   Layers,
+  Folder,
+  Video,
+  Code2,
+  PenTool,
+  Network,
+  Bookmark,
+  CalendarClock,
+  Workflow,
+  AppWindow,
 } from "lucide-react";
 
 const CREATE: { type: NodeType; label: string; icon: React.ReactNode }[] = [
@@ -33,6 +42,15 @@ const CREATE: { type: NodeType; label: string; icon: React.ReactNode }[] = [
   { type: "pdf", label: "New PDF", icon: <FileType2 size={15} /> },
   { type: "link", label: "New link", icon: <Link2 size={15} /> },
   { type: "ai", label: "New AI node", icon: <Sparkles size={15} /> },
+  { type: "folder", label: "New folder", icon: <Folder size={15} /> },
+  { type: "video", label: "New video", icon: <Video size={15} /> },
+  { type: "code", label: "New code snippet", icon: <Code2 size={15} /> },
+  { type: "whiteboard", label: "New whiteboard", icon: <PenTool size={15} /> },
+  { type: "mindmap", label: "New mind map", icon: <Network size={15} /> },
+  { type: "bookmark", label: "New bookmark", icon: <Bookmark size={15} /> },
+  { type: "event", label: "New calendar event", icon: <CalendarClock size={15} /> },
+  { type: "workflow", label: "New workflow", icon: <Workflow size={15} /> },
+  { type: "embed", label: "New embed", icon: <AppWindow size={15} /> },
 ];
 
 /**
@@ -76,15 +94,30 @@ export function CommandPalette() {
       pdf: "New PDF",
       link: "New link",
       ai: "Ask AI",
+      folder: "New folder",
+      video: "New video",
+      code: "Code snippet",
+      whiteboard: "Whiteboard",
+      mindmap: "Mind map",
+      bookmark: "New bookmark",
+      event: "New event",
+      workflow: "Workflow",
+      embed: "Embed",
     };
+    const linkLike = type === "link" || type === "bookmark" || type === "embed" || type === "video";
     addNode({
       type,
       title: titles[type] ?? "New node",
-      content: type === "note" ? "Start writing…" : "",
+      content:
+        type === "note"
+          ? "Start writing…"
+          : type === "code"
+          ? "// code"
+          : "",
       src:
         type === "image"
           ? "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=70"
-          : type === "link"
+          : linkLike
           ? "https://"
           : undefined,
     });
