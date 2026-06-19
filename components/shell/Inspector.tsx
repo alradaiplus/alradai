@@ -6,6 +6,7 @@ import { NODE_TYPE_META, type TaskPriority, type TaskStatus } from "@/lib/types"
 import { timeAgo, cn } from "@/lib/utils";
 import { streamOpenRouterClient } from "@/lib/ai/openrouter-client";
 import { BlockEditor } from "@/components/editor/BlockEditor";
+import { MediaControls } from "@/components/editor/MediaControls";
 import {
   Link2,
   Sparkles,
@@ -191,7 +192,25 @@ export function Inspector() {
         </div>
       )}
 
-      {/* Media source */}
+      {/* Upload from device / record (image, pdf, video, voice) */}
+      {(node.type === "image" ||
+        node.type === "pdf" ||
+        node.type === "video" ||
+        node.type === "voice") && (
+        <MediaControls
+          type={node.type}
+          onSrc={(src, fileName) =>
+            update(node.id, {
+              src,
+              ...(fileName && (!node.title || node.title.startsWith("New "))
+                ? { title: fileName }
+                : {}),
+            })
+          }
+        />
+      )}
+
+      {/* Or paste a URL (link, bookmark, embed, and the media types above) */}
       {(node.type === "link" ||
         node.type === "image" ||
         node.type === "pdf" ||
@@ -199,10 +218,12 @@ export function Inspector() {
         node.type === "bookmark" ||
         node.type === "embed") && (
         <input
-          value={node.src ?? ""}
+          value={node.src && node.src.startsWith("idb:") ? "" : node.src ?? ""}
           onChange={(e) => update(node.id, { src: e.target.value })}
-          placeholder="https://…"
-          className="mb-3 w-full rounded-lg border border-canvas-border bg-canvas-panel px-3 py-2 text-[12px] text-ink-muted outline-none focus:border-accent-ring"
+          placeholder={
+            node.src && node.src.startsWith("idb:") ? "Uploaded from device ✓" : "https://…"
+          }
+          className="mb-3 w-full rounded-lg border border-canvas-border bg-canvas-panel px-3 py-2 text-[12px] text-ink-muted outline-none focus:border-accent-ring placeholder:text-ink-faint"
         />
       )}
 

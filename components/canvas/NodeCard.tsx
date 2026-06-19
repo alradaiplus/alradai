@@ -27,6 +27,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { MarkdownLite } from "@/components/ui/MarkdownLite";
+import { useMediaURL } from "@/lib/media";
 
 const ICONS: Record<NodeType, LucideIcon> = {
   note: FileText,
@@ -132,12 +133,14 @@ export function NodeCard({ nodeId }: { nodeId: string }) {
 }
 
 function Body({ node, metaColor }: { node: SemanticNode; metaColor: string }) {
-  if (node.type === "image" && node.src) {
+  const mediaUrl = useMediaURL(node.src);
+
+  if (node.type === "image" && mediaUrl) {
     return (
       <div className="min-h-0 flex-1 overflow-hidden bg-canvas-bg">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={node.src}
+          src={mediaUrl}
           alt={node.title}
           className="h-full w-full object-cover"
           draggable={false}
@@ -168,11 +171,16 @@ function Body({ node, metaColor }: { node: SemanticNode; metaColor: string }) {
   }
 
   if (node.type === "video") {
+    const isImg = /\.(png|jpe?g|webp|gif)(\?|$)/i.test(node.src ?? "");
     return (
       <div className="min-h-0 flex-1 overflow-hidden bg-canvas-bg">
-        {node.src && /\.(png|jpe?g|webp|gif)$/i.test(node.src) ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={node.src} alt={node.title} className="h-full w-full object-cover" draggable={false} />
+        {mediaUrl ? (
+          isImg ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={mediaUrl} alt={node.title} className="h-full w-full object-cover" draggable={false} />
+          ) : (
+            <video src={mediaUrl} controls className="h-full w-full object-cover" />
+          )
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <Play size={26} style={{ color: metaColor }} />
@@ -248,6 +256,9 @@ function Body({ node, metaColor }: { node: SemanticNode; metaColor: string }) {
             ))}
           </div>
         </div>
+        {mediaUrl && (
+          <audio src={mediaUrl} controls className="mb-1.5 h-7 w-full" />
+        )}
         <p className="line-clamp-3 text-[11px] leading-snug text-ink-muted">
           {node.content}
         </p>
