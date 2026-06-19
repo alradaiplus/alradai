@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Wordmark } from "@/components/brand/Logo";
@@ -16,7 +15,6 @@ import {
   Hash,
   CalendarDays,
   Table2,
-  LayoutDashboard,
   Settings,
   Flame,
   CalendarRange,
@@ -24,23 +22,59 @@ import {
   Telescope,
   Activity,
   LayoutTemplate,
+  FileText,
+  Bookmark,
+  Link2,
+  Layers,
+  Brain,
+  Timer,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { href: "/app/home", label: "Home", icon: LayoutDashboard },
-  { href: "/app", label: "Canvas", icon: Home },
-  { href: "/app/database", label: "Database", icon: Table2 },
-  { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/app/habits", label: "Habit Tracker", icon: Flame },
-  { href: "/app/calendar", label: "Calendar", icon: CalendarRange },
-  { href: "/app/journal", label: "Journal", icon: CalendarDays },
-  { href: "/app/research", label: "Research", icon: Telescope },
-  { href: "/app/media", label: "Media", icon: Library },
-  { href: "/app/templates", label: "Templates", icon: LayoutTemplate },
-  { href: "/app/tags", label: "Tags", icon: Hash },
-  { href: "/app/graph", label: "Knowledge Graph", icon: Share2 },
-  { href: "/app/analytics", label: "Analytics", icon: Activity },
+const NAV_SECTIONS = [
+  {
+    label: null,
+    items: [
+      { href: "/app/home", label: "Home", icon: Home },
+      { href: "/app", label: "Canvas", icon: Layers },
+      { href: "/app/ai", label: "AI Assistant", icon: Sparkles },
+    ],
+  },
+  {
+    label: "KNOWLEDGE",
+    items: [
+      { href: "/app/database", label: "Notes", icon: FileText },
+      { href: "/app/graph", label: "Knowledge Graph", icon: Share2 },
+      { href: "/app/tags", label: "Links", icon: Link2 },
+      { href: "/app/tags", label: "Bookmarks", icon: Bookmark },
+    ],
+  },
+  {
+    label: "EXECUTION",
+    items: [
+      { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/app/database?type=project", label: "Projects", icon: FolderKanban },
+      { href: "/app/habits", label: "Habits", icon: Flame },
+      { href: "/app/calendar", label: "Calendar", icon: CalendarRange },
+    ],
+  },
+  {
+    label: "RESOURCES",
+    items: [
+      { href: "/app/media", label: "Files", icon: Library },
+      { href: "/app/database", label: "Databases", icon: Table2 },
+      { href: "/app/templates", label: "Templates", icon: LayoutTemplate },
+    ],
+  },
+  {
+    label: "TOOLS",
+    items: [
+      { href: "/app/database?q=", label: "Search", icon: Search },
+      { href: "/app/analytics", label: "Analytics", icon: Activity },
+      { href: "/app/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 export function LeftRail() {
@@ -55,10 +89,18 @@ export function LeftRail() {
   const selectBoard = useStore((s) => s.selectBoard);
   const addBoard = useStore((s) => s.addBoard);
   const nodes = useStore((s) => s.nodes);
+  const userName = useStore((s) => s.userName);
+
+  // Daily Focus: find the top-priority task due today
+  const today = new Date().toISOString().slice(0, 10);
+  const todayTasks = nodes.filter(
+    (n) => n.type === "task" && n.status !== "done" && n.due?.slice(0, 10) === today
+  );
+  const focusTask = todayTasks.find((t) => t.priority === "high") ?? todayTasks[0];
 
   if (!open) {
     return (
-      <div className="hidden w-14 flex-col items-center gap-3 border-r border-canvas-border bg-canvas-surface py-3 md:flex">
+      <div className="hidden w-14 shrink-0 flex-col items-center gap-3 border-r border-canvas-border bg-canvas-surface py-3 md:flex">
         <button onClick={() => toggle(true)} className="text-accent" title="Expand sidebar">
           <Home size={20} />
         </button>
@@ -68,6 +110,7 @@ export function LeftRail() {
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-canvas-border bg-canvas-surface md:flex">
+      {/* Logo */}
       <div className="flex items-center justify-between px-4 py-4">
         <Link href="/">
           <Wordmark />
@@ -81,59 +124,56 @@ export function LeftRail() {
         </button>
       </div>
 
-      <button
-        onClick={() => setCommandOpen(true)}
-        className="mx-3 mb-3 flex items-center gap-2 rounded-lg border border-canvas-border bg-canvas-panel px-3 py-2 text-[13px] text-ink-faint transition hover:border-accent-ring"
-      >
-        <Search size={15} />
-        <span>Search…</span>
-        <kbd className="ml-auto rounded bg-canvas-elevated px-1.5 py-0.5 font-mono text-[10px] text-ink-faint">
-          ⌘K
-        </kbd>
-      </button>
+      {/* Navigation */}
+      <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+        {NAV_SECTIONS.map((section, si) => (
+          <div key={si} className={si > 0 ? "mt-4" : ""}>
+            {section.label && (
+              <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-ink-faint/60">
+                {section.label}
+              </div>
+            )}
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href || (item.href !== "/app/home" && item.href !== "/app" && pathname.startsWith(item.href.split("?")[0]));
+              return (
+                <Link
+                  key={item.href + item.label}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition",
+                    active
+                      ? "bg-canvas-hover text-ink"
+                      : "text-ink-muted hover:bg-canvas-hover/60 hover:text-ink"
+                  )}
+                >
+                  <Icon size={15} className={active ? "text-accent" : "text-ink-faint"} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
 
-      <nav className="px-2">
-        {NAV.map((item) => {
-          const active = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition",
-                active
-                  ? "bg-accent-soft text-accent-hover"
-                  : "text-ink-muted hover:bg-canvas-hover hover:text-ink"
-              )}
+        {/* Spaces */}
+        <div className="mt-4">
+          <div className="mb-1 flex items-center justify-between px-2">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-faint/60">
+              SPACES
+            </span>
+            <button
+              onClick={() => {
+                const b = addBoard();
+                selectBoard(b.id);
+                router.push("/app");
+              }}
+              className="text-ink-faint hover:text-ink"
+              title="New space"
             >
-              <Icon size={16} />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="mt-5 flex items-center justify-between px-4 py-1">
-        <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-          <FolderKanban size={13} /> Spaces
-        </span>
-        <button
-          onClick={() => {
-            addBoard();
-            router.push("/app");
-          }}
-          className="text-ink-faint hover:text-ink"
-          title="New space"
-        >
-          <Plus size={14} />
-        </button>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-2">
-        {boards.map((b) => {
-          const count = nodes.filter((n) => n.boardId === b.id).length;
-          const active = b.id === currentBoardId;
-          return (
+              <Plus size={13} />
+            </button>
+          </div>
+          {boards.map((b) => (
             <button
               key={b.id}
               onClick={() => {
@@ -141,37 +181,52 @@ export function LeftRail() {
                 router.push("/app");
               }}
               className={cn(
-                "flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-[13px] transition hover:bg-canvas-hover",
-                active ? "bg-canvas-hover text-ink" : "text-ink-muted"
+                "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition",
+                b.id === currentBoardId
+                  ? "bg-canvas-hover text-ink"
+                  : "text-ink-muted hover:bg-canvas-hover/60 hover:text-ink"
               )}
             >
               <span
-                className="h-2 w-2 rounded-sm"
-                style={{ background: b.color ?? "#cfcfcf" }}
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ background: b.color ?? "#888" }}
               />
-              <span className="flex-1 truncate">{b.title}</span>
-              <span className="text-[10px] text-ink-faint">{count}</span>
+              <span className="flex-1 truncate text-left">{b.title}</span>
             </button>
-          );
-        })}
-      </div>
+          ))}
+          <button
+            onClick={() => {
+              const b = addBoard();
+              selectBoard(b.id);
+              router.push("/app");
+            }}
+            className="mt-1 flex w-full items-center gap-2 px-2.5 py-1 text-[12px] text-ink-faint hover:text-ink"
+          >
+            <Plus size={12} /> New Space
+          </button>
+        </div>
+      </nav>
 
-      <div className="mt-auto border-t border-canvas-border p-2">
-        <button
-          onClick={() => {
-            router.push("/app");
-            setTab("ai");
-          }}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-ink-muted transition hover:bg-canvas-hover hover:text-ink"
-        >
-          <Sparkles size={16} /> Workspace AI
-        </button>
-        <Link
-          href="/app/settings"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-ink-muted transition hover:bg-canvas-hover hover:text-ink"
-        >
-          <Settings size={16} /> Settings
-        </Link>
+      {/* Daily Focus widget */}
+      <div className="border-t border-canvas-border px-3 py-3">
+        <div className="rounded-xl bg-canvas-elevated p-3">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">
+            <Timer size={11} /> Daily Focus
+          </div>
+          {focusTask ? (
+            <>
+              <div className="truncate text-[12px] font-medium text-ink">{focusTask.title}</div>
+              <div className="mt-1 flex items-center gap-2">
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-canvas-border">
+                  <div className="h-full w-[72%] rounded-full bg-accent" />
+                </div>
+                <span className="text-[10px] text-ink-faint">72%</span>
+              </div>
+            </>
+          ) : (
+            <div className="text-[12px] text-ink-faint">No focus task today</div>
+          )}
+        </div>
       </div>
     </aside>
   );
