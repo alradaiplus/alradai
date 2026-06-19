@@ -5,8 +5,6 @@ import { Wordmark } from "@/components/brand/Logo";
 import { useStore } from "@/lib/store";
 import {
   Home,
-  Search,
-  FolderKanban,
   CheckSquare,
   Sparkles,
   Plus,
@@ -21,14 +19,11 @@ import {
   Library,
   Telescope,
   Activity,
-  LayoutTemplate,
   FileText,
-  Bookmark,
-  Link2,
   Layers,
-  Brain,
   Timer,
-  ChevronRight,
+  HelpCircle,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,17 +39,16 @@ const NAV_SECTIONS = [
   {
     label: "KNOWLEDGE",
     items: [
-      { href: "/app/database", label: "Notes", icon: FileText },
+      { href: "/app/notes", label: "Notes", icon: FileText },
       { href: "/app/graph", label: "Knowledge Graph", icon: Share2 },
-      { href: "/app/tags", label: "Links", icon: Link2 },
-      { href: "/app/tags", label: "Bookmarks", icon: Bookmark },
+      { href: "/app/tags", label: "Tags", icon: Hash },
+      { href: "/app/journal", label: "Journal", icon: CalendarDays },
     ],
   },
   {
     label: "EXECUTION",
     items: [
       { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
-      { href: "/app/database?type=project", label: "Projects", icon: FolderKanban },
       { href: "/app/habits", label: "Habits", icon: Flame },
       { href: "/app/calendar", label: "Calendar", icon: CalendarRange },
     ],
@@ -62,16 +56,16 @@ const NAV_SECTIONS = [
   {
     label: "RESOURCES",
     items: [
-      { href: "/app/media", label: "Files", icon: Library },
       { href: "/app/database", label: "Databases", icon: Table2 },
-      { href: "/app/templates", label: "Templates", icon: LayoutTemplate },
+      { href: "/app/media", label: "Files", icon: Library },
+      { href: "/app/research", label: "Research", icon: Telescope },
     ],
   },
   {
     label: "TOOLS",
     items: [
-      { href: "/app/database?q=", label: "Search", icon: Search },
       { href: "/app/analytics", label: "Analytics", icon: Activity },
+      { href: "/app/help", label: "How to use", icon: HelpCircle },
       { href: "/app/settings", label: "Settings", icon: Settings },
     ],
   },
@@ -88,6 +82,7 @@ export function LeftRail() {
   const currentBoardId = useStore((s) => s.currentBoardId);
   const selectBoard = useStore((s) => s.selectBoard);
   const addBoard = useStore((s) => s.addBoard);
+  const removeBoard = useStore((s) => s.removeBoard);
   const nodes = useStore((s) => s.nodes);
   const userName = useStore((s) => s.userName);
 
@@ -174,14 +169,10 @@ export function LeftRail() {
             </button>
           </div>
           {boards.map((b) => (
-            <button
+            <div
               key={b.id}
-              onClick={() => {
-                selectBoard(b.id);
-                router.push("/app");
-              }}
               className={cn(
-                "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition",
+                "group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition",
                 b.id === currentBoardId
                   ? "bg-canvas-hover text-ink"
                   : "text-ink-muted hover:bg-canvas-hover/60 hover:text-ink"
@@ -191,8 +182,32 @@ export function LeftRail() {
                 className="h-2 w-2 shrink-0 rounded-full"
                 style={{ background: b.color ?? "#888" }}
               />
-              <span className="flex-1 truncate text-left">{b.title}</span>
-            </button>
+              <button
+                onClick={() => {
+                  selectBoard(b.id);
+                  router.push("/app");
+                }}
+                className="flex-1 truncate text-left"
+              >
+                {b.title}
+              </button>
+              {boards.length > 1 && (
+                <button
+                  onClick={() => {
+                    if (
+                      confirm(
+                        `Delete space "${b.title}" and everything in it? This can't be undone.`
+                      )
+                    )
+                      removeBoard(b.id);
+                  }}
+                  className="opacity-0 transition group-hover:opacity-100 text-ink-faint hover:text-danger"
+                  title="Delete space"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
           ))}
           <button
             onClick={() => {

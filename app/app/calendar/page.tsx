@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { NODE_TYPE_META } from "@/lib/types";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
@@ -17,7 +17,18 @@ export default function CalendarPage() {
   const nodes = useStore((s) => s.nodes);
   const select = useStore((s) => s.select);
   const selectBoard = useStore((s) => s.selectBoard);
+  const addNode = useStore((s) => s.addNode);
   const router = useRouter();
+
+  const addEvent = (dayIso: string) => {
+    const title = prompt("New event title");
+    if (!title || !title.trim()) return;
+    addNode({
+      type: "event",
+      title: title.trim(),
+      due: new Date(`${dayIso}T09:00:00`).toISOString(),
+    });
+  };
   const [month, setMonth] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -83,19 +94,28 @@ export default function CalendarPage() {
             <div
               key={key}
               className={cn(
-                "min-h-[88px] border-b border-r border-canvas-border/60 p-1.5",
+                "group min-h-[88px] border-b border-r border-canvas-border/60 p-1.5",
                 !d && "bg-canvas-surface/30"
               )}
             >
               {d && (
                 <>
-                  <div
-                    className={cn(
-                      "mb-1 text-[11px]",
-                      isToday ? "font-semibold text-ink" : "text-ink-faint"
-                    )}
-                  >
-                    {d.getDate()}
+                  <div className="mb-1 flex items-center">
+                    <span
+                      className={cn(
+                        "text-[11px]",
+                        isToday ? "font-semibold text-ink" : "text-ink-faint"
+                      )}
+                    >
+                      {d.getDate()}
+                    </span>
+                    <button
+                      onClick={() => addEvent(iso(d))}
+                      className="ml-auto opacity-0 transition group-hover:opacity-100 text-ink-faint hover:text-ink"
+                      title="Add event"
+                    >
+                      <Plus size={12} />
+                    </button>
                   </div>
                   <div className="space-y-1">
                     {items.slice(0, 4).map((n) => (

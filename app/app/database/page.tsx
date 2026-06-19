@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { NODE_TYPE_META, type NodeType } from "@/lib/types";
 import { timeAgo, cn } from "@/lib/utils";
-import { Table2, Search } from "lucide-react";
+import { Table2, Search, Trash2 } from "lucide-react";
 
 type SortKey = "title" | "type" | "board" | "updatedAt";
 
@@ -18,6 +18,7 @@ export default function DatabasePage() {
   const boards = useStore((s) => s.boards);
   const select = useStore((s) => s.select);
   const selectBoard = useStore((s) => s.selectBoard);
+  const remove = useStore((s) => s.removeNode);
   const router = useRouter();
 
   const [q, setQ] = useState("");
@@ -109,7 +110,8 @@ export default function DatabasePage() {
               <th className="px-3 py-2 text-left font-medium">{th("board", "Board")}</th>
               <th className="px-3 py-2 text-left font-medium">Tags</th>
               <th className="px-3 py-2 text-left font-medium">Status</th>
-              <th className="px-5 py-2 text-left font-medium">{th("updatedAt", "Updated")}</th>
+              <th className="px-3 py-2 text-left font-medium">{th("updatedAt", "Updated")}</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -149,7 +151,19 @@ export default function DatabasePage() {
                     <span className="text-ink-faint">—</span>
                   )}
                 </td>
-                <td className="px-5 py-2 text-ink-faint">{timeAgo(n.updatedAt)}</td>
+                <td className="px-3 py-2 text-ink-faint">{timeAgo(n.updatedAt)}</td>
+                <td className="px-3 py-2 text-right">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Delete "${n.title}"?`)) remove(n.id);
+                    }}
+                    className="text-ink-faint transition hover:text-danger"
+                    title="Delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

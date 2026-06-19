@@ -479,7 +479,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: "notes-canvas-store",
-      version: 3,
+      version: 4,
       partialize: (s) => ({
         boards: s.boards,
         currentBoardId: s.currentBoardId,
@@ -492,26 +492,15 @@ export const useStore = create<AppState>()(
       }),
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<AppState>;
-        // v3: re-seed with rich demo data (habits, events, projects, boards)
-        if (version < 3) {
+        // v4: ship fresh — clear seeded demo content, keep user settings/keys.
+        if (version < 4) {
           return {
             ...state,
             boards: DEMO_BOARDS,
             currentBoardId: DEMO_CURRENT_BOARD,
-            nodes: DEMO_GRAPH.nodes,
-            edges: DEMO_GRAPH.edges,
+            nodes: [],
+            edges: [],
           } as AppState;
-        }
-        if (version < 2 || !state.boards || state.boards.length === 0) {
-          const boardId = "b_default";
-          state.boards = [
-            { id: boardId, title: "My Canvas", color: "#cfcfcf", updatedAt: now() },
-          ];
-          state.currentBoardId = boardId;
-          state.nodes = (state.nodes ?? []).map((n) => ({
-            ...n,
-            boardId: n.boardId ?? boardId,
-          }));
         }
         return state as AppState;
       },

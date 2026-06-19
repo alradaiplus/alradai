@@ -94,6 +94,7 @@ const Bridge = track(function Bridge() {
   const selectedId = useStore((s) => s.selectedId);
   const select = useStore((s) => s.select);
   const updateNode = useStore((s) => s.updateNode);
+  const removeNode = useStore((s) => s.removeNode);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // tldraw selection → store
@@ -137,6 +138,26 @@ const Bridge = track(function Bridge() {
     );
     return () => unsub();
   }, [editor, updateNode]);
+
+  // tldraw shape deletion (e.g. Delete key) → remove the node from the store,
+  // otherwise StoreSync would immediately recreate it.
+  useEffect(() => {
+    const unsub = editor.store.listen(
+      (entry) => {
+        for (const rec of Object.values(entry.changes.removed)) {
+          if (
+            rec &&
+            (rec as { typeName?: string }).typeName === "shape" &&
+            (rec as { type?: string }).type === "node"
+          ) {
+            removeNode((rec as unknown as NodeShape).props.nodeId);
+          }
+        }
+      },
+      { source: "user", scope: "document" }
+    );
+    return () => unsub();
+  }, [editor, removeNode]);
 
   return null;
 });
