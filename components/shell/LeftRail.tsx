@@ -19,6 +19,11 @@ import {
   LayoutDashboard,
   Settings,
   Flame,
+  CalendarRange,
+  Library,
+  Telescope,
+  Activity,
+  LayoutTemplate,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,9 +33,14 @@ const NAV = [
   { href: "/app/database", label: "Database", icon: Table2 },
   { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/app/habits", label: "Habit Tracker", icon: Flame },
+  { href: "/app/calendar", label: "Calendar", icon: CalendarRange },
   { href: "/app/journal", label: "Journal", icon: CalendarDays },
+  { href: "/app/research", label: "Research", icon: Telescope },
+  { href: "/app/media", label: "Media", icon: Library },
+  { href: "/app/templates", label: "Templates", icon: LayoutTemplate },
   { href: "/app/tags", label: "Tags", icon: Hash },
   { href: "/app/graph", label: "Knowledge Graph", icon: Share2 },
+  { href: "/app/analytics", label: "Analytics", icon: Activity },
 ];
 
 export function LeftRail() {
