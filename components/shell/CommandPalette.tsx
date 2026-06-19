@@ -30,6 +30,7 @@ import {
   CalendarClock,
   Workflow,
   AppWindow,
+  Flame,
 } from "lucide-react";
 
 const CREATE: { type: NodeType; label: string; icon: React.ReactNode }[] = [
@@ -51,6 +52,7 @@ const CREATE: { type: NodeType; label: string; icon: React.ReactNode }[] = [
   { type: "event", label: "New calendar event", icon: <CalendarClock size={15} /> },
   { type: "workflow", label: "New workflow", icon: <Workflow size={15} /> },
   { type: "embed", label: "New embed", icon: <AppWindow size={15} /> },
+  { type: "habit", label: "New habit", icon: <Flame size={15} /> },
 ];
 
 /**

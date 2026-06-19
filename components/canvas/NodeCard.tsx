@@ -24,6 +24,7 @@ import {
   Workflow,
   AppWindow,
   Play,
+  Flame,
   type LucideIcon,
 } from "lucide-react";
 import { MarkdownLite } from "@/components/ui/MarkdownLite";
@@ -48,6 +49,7 @@ const ICONS: Record<NodeType, LucideIcon> = {
   event: CalendarClock,
   workflow: Workflow,
   embed: AppWindow,
+  habit: Flame,
 };
 
 /**
@@ -217,6 +219,38 @@ function Body({ node, metaColor }: { node: SemanticNode; metaColor: string }) {
           <Icon size={26} style={{ color: metaColor }} />
         </div>
         <p className="line-clamp-2 text-[11px] text-ink-faint">{node.content}</p>
+      </div>
+    );
+  }
+
+  if (node.type === "habit") {
+    const log = new Set(node.habitLog ?? []);
+    const days = Array.from({ length: 7 }, (_, k) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - k));
+      return d.toISOString().slice(0, 10);
+    });
+    let streak = 0;
+    for (let k = 0; ; k++) {
+      const d = new Date();
+      d.setDate(d.getDate() - k);
+      if (log.has(d.toISOString().slice(0, 10))) streak++;
+      else break;
+    }
+    return (
+      <div className="flex min-h-0 flex-1 flex-col justify-center px-3 pb-2">
+        <div className="mb-1.5 flex items-center gap-1">
+          {days.map((d) => (
+            <span
+              key={d}
+              className="h-4 flex-1 rounded-sm"
+              style={{ background: log.has(d) ? metaColor : "var(--bg-elevated)" }}
+            />
+          ))}
+        </div>
+        <div className="flex items-center gap-1 text-[11px] text-ink-faint">
+          <Flame size={12} style={{ color: metaColor }} /> {streak}-day streak
+        </div>
       </div>
     );
   }

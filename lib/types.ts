@@ -25,7 +25,8 @@ export type NodeType =
   | "bookmark"
   | "event"
   | "workflow"
-  | "embed";
+  | "embed"
+  | "habit";
 
 export type EdgeKind = "arrow" | "wikilink" | "ai_suggested" | "reference";
 
@@ -57,6 +58,10 @@ export interface SemanticNode {
   due?: string;
   /** Research fields (type === "research"). */
   sources?: { title: string; url?: string }[];
+  /** Habit fields (type === "habit"): ISO dates completed + cadence. */
+  habitLog?: string[];
+  cadence?: "daily" | "weekly";
+  category?: string;
   /** Cached AI summary (any node). */
   summary?: string;
   updatedAt: string;
@@ -123,6 +128,7 @@ export const NODE_TYPE_META: Record<
   event: { label: "Event", color: "#9ab6e0", colorVar: "node-image" },
   workflow: { label: "Workflow", color: "#a7b9ff", colorVar: "node-ai" },
   embed: { label: "Embed", color: "#a0a0a0", colorVar: "node-link" },
+  habit: { label: "Habit", color: "#8fd0a0", colorVar: "node-voice" },
 };
 
 /** Default canvas footprint per node type. */
@@ -145,4 +151,5 @@ export const NODE_DEFAULT_SIZE: Record<NodeType, { w: number; h: number }> = {
   event: { w: 260, h: 130 },
   workflow: { w: 300, h: 180 },
   embed: { w: 300, h: 200 },
+  habit: { w: 260, h: 140 },
 };

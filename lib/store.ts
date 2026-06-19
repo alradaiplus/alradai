@@ -69,6 +69,7 @@ interface AppState {
   ) => SemanticNode;
   removeNode: (id: string) => void;
   cycleTask: (id: string) => void;
+  toggleHabit: (id: string, date: string) => void;
   summarizeNode: (id: string) => void;
 
   // ---- Edges / connections ----
@@ -294,6 +295,18 @@ export const useStore = create<AppState>()(
               done: "todo",
             };
             return { ...n, status: next[n.status ?? "todo"], updatedAt: now() };
+          }),
+        })),
+
+      toggleHabit: (id, date) =>
+        set((s) => ({
+          nodes: s.nodes.map((n) => {
+            if (n.id !== id || n.type !== "habit") return n;
+            const log = n.habitLog ?? [];
+            const next = log.includes(date)
+              ? log.filter((d) => d !== date)
+              : [...log, date];
+            return { ...n, habitLog: next, updatedAt: now() };
           }),
         })),
 
