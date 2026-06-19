@@ -195,6 +195,24 @@ export function CommandPalette() {
             </Item>
             <Item
               onSelect={() => {
+                router.push("/app/journal");
+                setOpen(false);
+              }}
+              icon={<CalendarClock size={15} />}
+            >
+              Open Journal
+            </Item>
+            <Item
+              onSelect={() => {
+                router.push("/app/tags");
+                setOpen(false);
+              }}
+              icon={<Layers size={15} />}
+            >
+              Open Tags
+            </Item>
+            <Item
+              onSelect={() => {
                 router.push("/app/graph");
                 setOpen(false);
               }}

@@ -70,6 +70,7 @@ interface AppState {
   dismissSuggestedEdge: (id: string) => void;
   backlinks: (id: string) => SemanticNode[];
   outgoing: (id: string) => SemanticNode[];
+  unlinkedMentions: (id: string) => SemanticNode[];
   startConnect: (id: string) => void;
   cancelConnect: () => void;
   completeConnect: (targetId: string) => void;
@@ -335,6 +336,29 @@ export const useStore = create<AppState>()(
           )
           .map((e) => e.target);
         return s.nodes.filter((n) => targetIds.includes(n.id));
+      },
+
+      unlinkedMentions: (id) => {
+        const s = get();
+        const self = s.nodes.find((n) => n.id === id);
+        if (!self || !self.title.trim()) return [];
+        const needle = self.title.toLowerCase();
+        const linked = new Set(
+          s.edges
+            .filter(
+              (e) =>
+                e.status !== "dismissed" &&
+                (e.source === id || e.target === id)
+            )
+            .map((e) => (e.source === id ? e.target : e.source))
+        );
+        return s.nodes.filter(
+          (n) =>
+            n.id !== id &&
+            n.boardId === self.boardId &&
+            !linked.has(n.id) &&
+            `${n.title} ${n.content}`.toLowerCase().includes(needle)
+        );
       },
 
       startConnect: (id) => set({ connectSourceId: id }),

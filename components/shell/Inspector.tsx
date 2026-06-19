@@ -34,6 +34,7 @@ export function Inspector() {
   const select = useStore((s) => s.select);
   const backlinks = useStore((s) => s.backlinks);
   const outgoing = useStore((s) => s.outgoing);
+  const unlinkedMentions = useStore((s) => s.unlinkedMentions);
   const accept = useStore((s) => s.acceptSuggestedEdge);
   const dismiss = useStore((s) => s.dismissSuggestedEdge);
   const addEdge = useStore((s) => s.addEdge);
@@ -60,6 +61,7 @@ export function Inspector() {
   const meta = NODE_TYPE_META[node.type];
   const links = backlinks(node.id);
   const out = outgoing(node.id);
+  const mentions = unlinkedMentions(node.id);
   const suggestions = edges.filter(
     (e) =>
       e.status === "suggested" && (e.source === node.id || e.target === node.id)
@@ -415,6 +417,34 @@ export function Inspector() {
         onSelect={select}
         empty="No backlinks yet."
       />
+
+      {/* Unlinked mentions */}
+      {mentions.length > 0 && (
+        <div className="mt-5">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-faint">
+            <Sparkles size={12} /> Unlinked mentions ({mentions.length})
+          </div>
+          {mentions.map((m) => (
+            <div
+              key={m.id}
+              className="mb-1.5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] text-ink-muted transition hover:bg-canvas-hover"
+            >
+              <button
+                onClick={() => select(m.id)}
+                className="flex-1 truncate text-left hover:text-ink"
+              >
+                {m.title}
+              </button>
+              <button
+                onClick={() => addEdge(m.id, node.id, "reference")}
+                className="rounded bg-canvas-elevated px-2 py-0.5 text-[11px] text-ink-muted hover:text-ink"
+              >
+                Link
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
