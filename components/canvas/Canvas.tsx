@@ -25,7 +25,7 @@ const components: TLComponents = {
   PageMenu: null,
   MainMenu: null,
   StylePanel: null,
-  NavigationPanel: null,
+  // NavigationPanel kept (default) → minimap + zoom (Miro pillar).
   HelpMenu: null,
   DebugPanel: null,
   ZoomMenu: null,

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { NODE_TYPE_META, type TaskPriority, type TaskStatus } from "@/lib/types";
 import { timeAgo, cn } from "@/lib/utils";
+import { streamOpenRouterClient } from "@/lib/ai/openrouter-client";
 import {
   Link2,
   Sparkles,
@@ -11,6 +13,8 @@ import {
   CornerDownRight,
   Spline,
   Wand2,
+  Expand,
+  ScanSearch,
 } from "lucide-react";
 
 const STATUSES: TaskStatus[] = ["todo", "doing", "done"];
@@ -36,6 +40,11 @@ export function Inspector() {
   const startConnect = useStore((s) => s.startConnect);
   const connectSourceId = useStore((s) => s.connectSourceId);
   const summarize = useStore((s) => s.summarizeNode);
+  const aiKey = useStore((s) => s.aiKey);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiOut, setAiOut] = useState<{ kind: "extend" | "critique"; text: string } | null>(
+    null
+  );
 
   if (!node) {
     return (
@@ -63,6 +72,38 @@ export function Inspector() {
       !out.some((o) => o.id === n.id)
   );
 
+  const runAction = async (kind: "extend" | "critique") => {
+    if (!aiKey || aiBusy) return;
+    const instruction =
+      kind === "extend"
+        ? "Extend and develop this note with additional, non-redundant detail in the same voice. Return only the continuation — no preamble."
+        : "Critique this note: list its key gaps, weak points, and 2–3 concrete improvements. Be terse and specific.";
+    setAiBusy(true);
+    setAiOut({ kind, text: "" });
+    try {
+      let acc = "";
+      for await (const d of streamOpenRouterClient({
+        apiKey: aiKey,
+        maxTokens: 600,
+        messages: [
+          { role: "system", content: "You are Notes Canvas, the user's writing copilot." },
+          {
+            role: "user",
+            content: `${instruction}\n\nTITLE: ${node.title}\n\nNOTE:\n${node.content}`,
+          },
+        ],
+      })) {
+        acc += d;
+        setAiOut({ kind, text: acc });
+      }
+      if (!acc) setAiOut({ kind, text: "(No response.)" });
+    } catch (e) {
+      setAiOut({ kind, text: `Error: ${e instanceof Error ? e.message : String(e)}` });
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   return (
     <div className="flex h-full flex-col overflow-y-auto px-4 py-4">
       <div className="mb-3 flex items-center gap-2">
@@ -76,15 +117,8 @@ export function Inspector() {
           edited {timeAgo(node.updatedAt)}
         </span>
         <button
-          onClick={() => summarize(node.id)}
-          className="ml-auto text-ink-faint transition hover:text-ink"
-          title="AI summary"
-        >
-          <Wand2 size={15} />
-        </button>
-        <button
           onClick={() => remove(node.id)}
-          className="text-ink-faint transition hover:text-danger"
+          className="ml-auto text-ink-faint transition hover:text-danger"
           title="Delete node"
         >
           <Trash2 size={15} />
@@ -170,6 +204,68 @@ export function Inspector() {
         className="min-h-[120px] w-full resize-y rounded-lg border border-canvas-border bg-canvas-panel p-3 text-[13px] leading-relaxed text-ink-muted outline-none focus:border-accent-ring"
         placeholder="Write in markdown. Use [[Title]] to link notes."
       />
+
+      {/* Per-node AI actions */}
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <button
+          onClick={() => summarize(node.id)}
+          className="flex items-center gap-1.5 rounded-lg border border-canvas-border px-2.5 py-1 text-[12px] text-ink-muted transition hover:border-accent-ring hover:text-ink"
+        >
+          <Wand2 size={12} /> Summarize
+        </button>
+        <button
+          onClick={() => runAction("extend")}
+          disabled={!aiKey || aiBusy}
+          title={aiKey ? "Extend with AI" : "Connect OpenRouter in the AI tab"}
+          className="flex items-center gap-1.5 rounded-lg border border-canvas-border px-2.5 py-1 text-[12px] text-ink-muted transition hover:border-accent-ring hover:text-ink disabled:opacity-40"
+        >
+          <Expand size={12} /> Extend
+        </button>
+        <button
+          onClick={() => runAction("critique")}
+          disabled={!aiKey || aiBusy}
+          title={aiKey ? "Critique with AI" : "Connect OpenRouter in the AI tab"}
+          className="flex items-center gap-1.5 rounded-lg border border-canvas-border px-2.5 py-1 text-[12px] text-ink-muted transition hover:border-accent-ring hover:text-ink disabled:opacity-40"
+        >
+          <ScanSearch size={12} /> Critique
+        </button>
+        {!aiKey && (
+          <span className="text-[10px] text-ink-faint">Connect a key in the AI tab</span>
+        )}
+      </div>
+
+      {aiOut && (
+        <div className="mt-2 rounded-lg border border-node-ai/30 bg-node-ai/5 p-3">
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-node-ai">
+            <Sparkles size={12} /> {aiOut.kind === "extend" ? "Extension" : "Critique"}
+            {aiBusy && " …"}
+          </div>
+          <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-ink-muted">
+            {aiOut.text}
+          </p>
+          {!aiBusy && (
+            <div className="mt-2 flex gap-2">
+              {aiOut.kind === "extend" && (
+                <button
+                  onClick={() => {
+                    update(node.id, { content: `${node.content}\n\n${aiOut.text}` });
+                    setAiOut(null);
+                  }}
+                  className="rounded bg-node-ai/20 px-2 py-0.5 text-[11px] text-node-ai hover:bg-node-ai/30"
+                >
+                  Append to note
+                </button>
+              )}
+              <button
+                onClick={() => setAiOut(null)}
+                className="text-[11px] text-ink-faint hover:text-ink"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {node.summary && (
         <div className="mt-3 rounded-lg border border-canvas-border bg-canvas-panel p-3">
