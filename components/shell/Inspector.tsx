@@ -17,6 +17,7 @@ import {
   Wand2,
   Expand,
   ScanSearch,
+  CircleCheck,
 } from "lucide-react";
 
 const STATUSES: TaskStatus[] = ["todo", "doing", "done"];
@@ -40,6 +41,7 @@ export function Inspector() {
   const accept = useStore((s) => s.acceptSuggestedEdge);
   const dismiss = useStore((s) => s.dismissSuggestedEdge);
   const addEdge = useStore((s) => s.addEdge);
+  const addNode = useStore((s) => s.addNode);
   const startConnect = useStore((s) => s.startConnect);
   const connectSourceId = useStore((s) => s.connectSourceId);
   const summarize = useStore((s) => s.summarizeNode);
@@ -103,6 +105,51 @@ export function Inspector() {
       if (!acc) setAiOut({ kind, text: "(No response.)" });
     } catch (e) {
       setAiOut({ kind, text: `Error: ${e instanceof Error ? e.message : String(e)}` });
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const generateTasks = async () => {
+    if (!node || !aiKey || aiBusy) return;
+    setAiBusy(true);
+    setAiOut({ kind: "extend", text: "Generating tasks…" });
+    try {
+      let acc = "";
+      for await (const d of streamOpenRouterClient({
+        apiKey: aiKey,
+        maxTokens: 400,
+        messages: [
+          { role: "system", content: "You break work into concrete, actionable tasks." },
+          {
+            role: "user",
+            content: `From this note, produce 3–6 short, actionable tasks. One per line, no numbering, no preamble.\n\nTITLE: ${node.title}\n\nNOTE:\n${node.content}`,
+          },
+        ],
+      })) {
+        acc += d;
+      }
+      const titles = acc
+        .split("\n")
+        .map((l) => l.replace(/^[-*\d.\s\[\]xX]+/, "").trim())
+        .filter((l) => l.length > 2)
+        .slice(0, 8);
+      titles.forEach((title, i) => {
+        const t = addNode({
+          type: "task",
+          title,
+          boardId: node.boardId,
+          projectId: node.projectId,
+          x: node.x + (i % 2) * 290,
+          y: node.y + node.h + 48 + Math.floor(i / 2) * 140,
+        });
+        addEdge(node.id, t.id, "reference");
+      });
+      setAiOut(null);
+      if (typeof window !== "undefined")
+        setTimeout(() => alert(`Created ${titles.length} task${titles.length === 1 ? "" : "s"}.`), 30);
+    } catch (e) {
+      setAiOut({ kind: "critique", text: `Error: ${e instanceof Error ? e.message : String(e)}` });
     } finally {
       setAiBusy(false);
     }
@@ -256,6 +303,14 @@ export function Inspector() {
           className="flex items-center gap-1.5 rounded-lg border border-canvas-border px-2.5 py-1 text-[12px] text-ink-muted transition hover:border-accent-ring hover:text-ink disabled:opacity-40"
         >
           <ScanSearch size={12} /> Critique
+        </button>
+        <button
+          onClick={generateTasks}
+          disabled={!aiKey || aiBusy}
+          title={aiKey ? "Generate tasks with AI" : "Connect OpenRouter in the AI tab"}
+          className="flex items-center gap-1.5 rounded-lg border border-canvas-border px-2.5 py-1 text-[12px] text-ink-muted transition hover:border-accent-ring hover:text-ink disabled:opacity-40"
+        >
+          <CircleCheck size={12} /> Tasks
         </button>
         {!aiKey && (
           <span className="text-[10px] text-ink-faint">Connect a key in the AI tab</span>
