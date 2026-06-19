@@ -24,6 +24,8 @@ import {
   Timer,
   HelpCircle,
   X,
+  FolderKanban,
+  Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +51,7 @@ const NAV_SECTIONS = [
     label: "EXECUTION",
     items: [
       { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/app/projects", label: "Projects", icon: FolderKanban },
       { href: "/app/habits", label: "Habits", icon: Flame },
       { href: "/app/calendar", label: "Calendar", icon: CalendarRange },
     ],
@@ -83,6 +86,7 @@ export function LeftRail() {
   const selectBoard = useStore((s) => s.selectBoard);
   const addBoard = useStore((s) => s.addBoard);
   const removeBoard = useStore((s) => s.removeBoard);
+  const setupLifeOS = useStore((s) => s.setupLifeOS);
   const nodes = useStore((s) => s.nodes);
   const userName = useStore((s) => s.userName);
 
@@ -219,6 +223,14 @@ export function LeftRail() {
           >
             <Plus size={12} /> New Space
           </button>
+          {boards.length <= 1 && (
+            <button
+              onClick={() => setupLifeOS()}
+              className="mt-0.5 flex w-full items-center gap-2 px-2.5 py-1 text-[12px] text-ink-faint hover:text-ink"
+            >
+              <Sun size={12} /> Set up Life OS
+            </button>
+          )}
         </div>
       </nav>
 

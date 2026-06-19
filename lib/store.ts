@@ -33,6 +33,7 @@ interface AppState {
   rightPanelOpen: boolean;
   leftRailOpen: boolean;
   commandOpen: boolean;
+  quickCaptureOpen: boolean;
   /** When set, the next node pick creates a connection from this id. */
   connectSourceId: string | null;
   /** User's OpenRouter key — browser-only (never committed), enables real AI. */
@@ -50,6 +51,8 @@ interface AppState {
   toggleRightPanel: (open?: boolean) => void;
   toggleLeftRail: (open?: boolean) => void;
   setCommandOpen: (open: boolean) => void;
+  setQuickCapture: (open: boolean) => void;
+  setupLifeOS: () => void;
   setAiKey: (key: string | null) => void;
   setAiModel: (model: string) => void;
   setUserName: (name: string) => void;
@@ -164,6 +167,7 @@ export const useStore = create<AppState>()(
       rightPanelOpen: true,
       leftRailOpen: true,
       commandOpen: false,
+      quickCaptureOpen: false,
       connectSourceId: null,
       aiKey: null,
       aiModel: "anthropic/claude-3.5-sonnet",
@@ -182,6 +186,21 @@ export const useStore = create<AppState>()(
       toggleLeftRail: (open) =>
         set((s) => ({ leftRailOpen: open ?? !s.leftRailOpen })),
       setCommandOpen: (open) => set({ commandOpen: open }),
+      setQuickCapture: (open) => set({ quickCaptureOpen: open }),
+      setupLifeOS: () =>
+        set((s) => {
+          const presets = ["Personal", "Learning", "Health", "Business", "Projects"];
+          const have = new Set(s.boards.map((b) => b.title.toLowerCase()));
+          const toAdd = presets
+            .filter((p) => !have.has(p.toLowerCase()))
+            .map((title) => ({
+              id: `b_${nanoid(6)}`,
+              title,
+              color: "#cfcfcf",
+              updatedAt: now(),
+            }));
+          return toAdd.length ? { boards: [...s.boards, ...toAdd] } : s;
+        }),
       setAiKey: (key) => set({ aiKey: key && key.trim() ? key.trim() : null }),
       setAiModel: (model) => set({ aiModel: model || "anthropic/claude-3.5-sonnet" }),
       setUserName: (name) => set({ userName: name.trim() || "You" }),

@@ -64,6 +64,8 @@ export interface SemanticNode {
   cadence?: "daily" | "weekly";
   category?: string;
   goal?: string;
+  /** Journal entry mood (type === "note" tagged "daily"). */
+  mood?: string;
   /** Cached AI summary (any node). */
   summary?: string;
   updatedAt: string;

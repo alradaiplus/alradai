@@ -34,12 +34,21 @@ export default function CalendarPage() {
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
 
-  const dated = nodes.filter((n) => n.due);
+  // Unified: dated nodes (tasks/events) + journal entries (daily notes).
   const byDay = new Map<string, typeof nodes>();
-  dated.forEach((n) => {
-    const k = n.due!.slice(0, 10);
+  const push = (k: string, n: (typeof nodes)[number]) =>
     byDay.set(k, [...(byDay.get(k) ?? []), n]);
+  nodes.forEach((n) => {
+    if (n.due) push(n.due.slice(0, 10), n);
+    else if (n.tags.includes("daily") && /^\d{4}-\d{2}-\d{2}$/.test(n.title)) push(n.title, n);
   });
+
+  // Habit completion ratio per day (for the day's intensity dot).
+  const habits = nodes.filter((n) => n.type === "habit");
+  const habitRatio = (k: string) =>
+    habits.length
+      ? habits.filter((h) => (h.habitLog ?? []).includes(k)).length / habits.length
+      : 0;
 
   const first = new Date(month.getFullYear(), month.getMonth(), 1);
   const startPad = first.getDay();
@@ -109,6 +118,17 @@ export default function CalendarPage() {
                     >
                       {d.getDate()}
                     </span>
+                    {habitRatio(iso(d)) > 0 && (
+                      <span
+                        className="ml-1.5 h-2 w-2 rounded-full"
+                        title="Habit completion"
+                        style={{
+                          background: `rgb(${40 + habitRatio(iso(d)) * 200},${
+                            40 + habitRatio(iso(d)) * 200
+                          },${40 + habitRatio(iso(d)) * 200})`,
+                        }}
+                      />
+                    )}
                     <button
                       onClick={() => addEvent(iso(d))}
                       className="ml-auto opacity-0 transition group-hover:opacity-100 text-ink-faint hover:text-ink"

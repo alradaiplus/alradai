@@ -4,6 +4,7 @@ import { LeftRail } from "./LeftRail";
 import { RightPanel } from "./RightPanel";
 import { MobilePanels } from "./MobilePanels";
 import { CommandPalette } from "./CommandPalette";
+import { QuickCapture } from "./QuickCapture";
 
 /**
  * The three-pane application shell: left rail · main surface · right panel,
@@ -17,6 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <RightPanel />
       <MobilePanels />
       <CommandPalette />
+      <QuickCapture />
     </div>
   );
 }

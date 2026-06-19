@@ -70,6 +70,8 @@ export function CommandPalette() {
   const addNode = useStore((s) => s.addNode);
   const addBoard = useStore((s) => s.addBoard);
   const discoverLinks = useStore((s) => s.discoverLinks);
+  const setQuickCapture = useStore((s) => s.setQuickCapture);
+  const setupLifeOS = useStore((s) => s.setupLifeOS);
   const router = useRouter();
 
   useEffect(() => {
@@ -157,6 +159,33 @@ export function CommandPalette() {
           </Group>
 
           <Group heading="Actions">
+            <Item
+              onSelect={() => {
+                setOpen(false);
+                setQuickCapture(true);
+              }}
+              icon={<Plus size={15} />}
+            >
+              Quick capture
+            </Item>
+            <Item
+              onSelect={() => {
+                router.push("/app/projects");
+                setOpen(false);
+              }}
+              icon={<Layers size={15} />}
+            >
+              Open Projects
+            </Item>
+            <Item
+              onSelect={() => {
+                setupLifeOS();
+                setOpen(false);
+              }}
+              icon={<Layers size={15} />}
+            >
+              Set up Life OS spaces
+            </Item>
             <Item
               onSelect={() => {
                 const n = discoverLinks();
