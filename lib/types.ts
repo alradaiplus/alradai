@@ -26,7 +26,8 @@ export type NodeType =
   | "event"
   | "workflow"
   | "embed"
-  | "habit";
+  | "habit"
+  | "diagram";
 
 export type EdgeKind = "arrow" | "wikilink" | "ai_suggested" | "reference";
 
@@ -129,6 +130,7 @@ export const NODE_TYPE_META: Record<
   workflow: { label: "Workflow", color: "#a7b9ff", colorVar: "node-ai" },
   embed: { label: "Embed", color: "#a0a0a0", colorVar: "node-link" },
   habit: { label: "Habit", color: "#8fd0a0", colorVar: "node-voice" },
+  diagram: { label: "Diagram", color: "#9ab6e0", colorVar: "node-image" },
 };
 
 /** Default canvas footprint per node type. */
@@ -152,4 +154,5 @@ export const NODE_DEFAULT_SIZE: Record<NodeType, { w: number; h: number }> = {
   workflow: { w: 300, h: 180 },
   embed: { w: 300, h: 200 },
   habit: { w: 260, h: 140 },
+  diagram: { w: 300, h: 200 },
 };

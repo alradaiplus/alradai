@@ -55,7 +55,8 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
       "event",
       "workflow",
       "embed",
-      "habit"
+      "habit",
+      "diagram"
     ),
   };
 

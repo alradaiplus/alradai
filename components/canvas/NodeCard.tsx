@@ -50,6 +50,7 @@ const ICONS: Record<NodeType, LucideIcon> = {
   workflow: Workflow,
   embed: AppWindow,
   habit: Flame,
+  diagram: Network,
 };
 
 /**
@@ -211,8 +212,18 @@ function Body({ node, metaColor }: { node: SemanticNode; metaColor: string }) {
     );
   }
 
-  if (node.type === "whiteboard" || node.type === "mindmap" || node.type === "workflow") {
-    const Icon = node.type === "mindmap" ? Network : node.type === "workflow" ? Workflow : PenTool;
+  if (
+    node.type === "whiteboard" ||
+    node.type === "mindmap" ||
+    node.type === "workflow" ||
+    node.type === "diagram"
+  ) {
+    const Icon =
+      node.type === "mindmap" || node.type === "diagram"
+        ? Network
+        : node.type === "workflow"
+        ? Workflow
+        : PenTool;
     return (
       <div className="flex min-h-0 flex-1 flex-col px-3 pb-2">
         <div className="mb-2 flex flex-1 items-center justify-center rounded-lg border border-dashed border-canvas-border bg-canvas-bg">

@@ -53,6 +53,7 @@ const CREATE: { type: NodeType; label: string; icon: React.ReactNode }[] = [
   { type: "workflow", label: "New workflow", icon: <Workflow size={15} /> },
   { type: "embed", label: "New embed", icon: <AppWindow size={15} /> },
   { type: "habit", label: "New habit", icon: <Flame size={15} /> },
+  { type: "diagram", label: "New diagram", icon: <Network size={15} /> },
 ];
 
 /**
