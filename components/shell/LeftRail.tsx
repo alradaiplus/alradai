@@ -15,11 +15,13 @@ import {
   Share2,
   Hash,
   CalendarDays,
+  Table2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/app", label: "Canvas", icon: Home },
+  { href: "/app/database", label: "Database", icon: Table2 },
   { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/app/journal", label: "Journal", icon: CalendarDays },
   { href: "/app/tags", label: "Tags", icon: Hash },

@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { NODE_TYPE_META, type TaskPriority, type TaskStatus } from "@/lib/types";
 import { timeAgo, cn } from "@/lib/utils";
 import { streamOpenRouterClient } from "@/lib/ai/openrouter-client";
+import { BlockEditor } from "@/components/editor/BlockEditor";
 import {
   Link2,
   Sparkles,
@@ -205,11 +206,10 @@ export function Inspector() {
         />
       )}
 
-      <textarea
+      <BlockEditor
         value={node.content}
-        onChange={(e) => update(node.id, { content: e.target.value })}
-        className="min-h-[120px] w-full resize-y rounded-lg border border-canvas-border bg-canvas-panel p-3 text-[13px] leading-relaxed text-ink-muted outline-none focus:border-accent-ring"
-        placeholder="Write in markdown. Use [[Title]] to link notes."
+        onChange={(v) => update(node.id, { content: v })}
+        placeholder="Write here. Type / for blocks, [[Title]] to link."
       />
 
       {/* Per-node AI actions */}
