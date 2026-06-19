@@ -69,6 +69,40 @@ export function isLocalMedia(ref?: string): boolean {
   return !!ref && ref.startsWith("idb:");
 }
 
+/**
+ * Downscale + recompress an image so uploads are fast and small (big phone
+ * photos can be many MB). Non-images and failures pass through unchanged.
+ */
+export async function compressImage(
+  file: File,
+  maxDim = 1600,
+  quality = 0.82
+): Promise<Blob> {
+  if (!file.type.startsWith("image/") || typeof createImageBitmap !== "function") {
+    return file;
+  }
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+    const blob = await new Promise<Blob | null>((res) =>
+      canvas.toBlob(res, "image/webp", quality)
+    );
+    // Only use the compressed version if it actually helped.
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  }
+}
+
 /** Resolve a node `src` (idb: / http / data) to a displayable URL. */
 export function useMediaURL(src?: string): string | null {
   const [url, setUrl] = useState<string | null>(

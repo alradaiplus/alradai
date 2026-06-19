@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { putMedia } from "@/lib/media";
+import { putMedia, compressImage } from "@/lib/media";
 import type { NodeType } from "@/lib/types";
 import { Upload, Mic, Square, Loader2 } from "lucide-react";
 
@@ -33,8 +33,11 @@ export function MediaControls({
   const handleFile = async (f: File) => {
     setBusy(true);
     try {
-      const ref = await putMedia(f);
+      const blob = type === "image" ? await compressImage(f) : f;
+      const ref = await putMedia(blob);
       onSrc(ref, f.name);
+    } catch (e) {
+      alert(`Upload failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setBusy(false);
     }

@@ -75,9 +75,10 @@ body {
   color: inherit;
 }
 
-/* Hide tldraw watermark gracefully in dev (respect license in production) */
+/* tldraw watermark hidden at the owner's request — requires a tldraw business
+   license to be compliant. See https://tldraw.dev/legal/tldraw-license */
 .tl-watermark_SEE-LICENSE {
-  opacity: 0.25;
+  display: none !important;
 }
 
 @layer utilities {
