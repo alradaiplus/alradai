@@ -41,6 +41,8 @@ interface AppState {
   aiModel: string;
   /** Display name shown in the shell / dashboard. */
   userName: string;
+  /** Workspace memory — durable facts the AI is told to remember. */
+  memories: { id: string; text: string }[];
 
   // ---- UI ----
   select: (id: string | null) => void;
@@ -51,6 +53,8 @@ interface AppState {
   setAiKey: (key: string | null) => void;
   setAiModel: (model: string) => void;
   setUserName: (name: string) => void;
+  addMemory: (text: string) => void;
+  removeMemory: (id: string) => void;
   exportWorkspace: () => string;
 
   // ---- Boards ----
@@ -164,6 +168,7 @@ export const useStore = create<AppState>()(
       aiKey: null,
       aiModel: "anthropic/claude-3.5-sonnet",
       userName: "You",
+      memories: [],
 
       // ---- UI ----
       select: (id) =>
@@ -180,6 +185,14 @@ export const useStore = create<AppState>()(
       setAiKey: (key) => set({ aiKey: key && key.trim() ? key.trim() : null }),
       setAiModel: (model) => set({ aiModel: model || "anthropic/claude-3.5-sonnet" }),
       setUserName: (name) => set({ userName: name.trim() || "You" }),
+      addMemory: (text) =>
+        set((s) =>
+          text.trim()
+            ? { memories: [...s.memories, { id: `m_${nanoid(6)}`, text: text.trim() }] }
+            : s
+        ),
+      removeMemory: (id) =>
+        set((s) => ({ memories: s.memories.filter((m) => m.id !== id) })),
       exportWorkspace: () => {
         const s = get();
         return JSON.stringify(
@@ -475,6 +488,7 @@ export const useStore = create<AppState>()(
         aiKey: s.aiKey,
         aiModel: s.aiModel,
         userName: s.userName,
+        memories: s.memories,
       }),
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<AppState>;

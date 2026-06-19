@@ -35,6 +35,7 @@ export function AIChat() {
   const aiKey = useStore((s) => s.aiKey);
   const setAiKey = useStore((s) => s.setAiKey);
   const aiModel = useStore((s) => s.aiModel);
+  const memories = useStore((s) => s.memories);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -79,8 +80,13 @@ export function AIChat() {
     if (STATIC_EXPORT) {
       try {
         if (aiKey) {
+          const memBlock = memories.length
+            ? `\n\nWORKSPACE MEMORY (always honor):\n${memories
+                .map((m) => `- ${m.text}`)
+                .join("\n")}`
+            : "";
           const chat: ClientChatMessage[] = [
-            { role: "system", content: SYSTEM(contextBlock(hits)) },
+            { role: "system", content: SYSTEM(contextBlock(hits)) + memBlock },
             ...history.map((h) => ({ role: h.role, content: h.content })),
             { role: "user", content: q },
           ];

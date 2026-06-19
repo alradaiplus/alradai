@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { looksLikeOpenRouterKey } from "@/lib/ai/openrouter-client";
-import { User, Sparkles, Database, Palette, Check } from "lucide-react";
+import { User, Sparkles, Database, Palette, Check, Brain, X } from "lucide-react";
 
 const MODELS = [
   "anthropic/claude-3.5-sonnet",
@@ -27,7 +27,11 @@ export default function SettingsPage() {
   const setAiModel = useStore((s) => s.setAiModel);
   const exportWorkspace = useStore((s) => s.exportWorkspace);
   const reset = useStore((s) => s.reset);
+  const memories = useStore((s) => s.memories);
+  const addMemory = useStore((s) => s.addMemory);
+  const removeMemory = useStore((s) => s.removeMemory);
   const [keyInput, setKeyInput] = useState("");
+  const [memInput, setMemInput] = useState("");
 
   const doExport = () => {
     const blob = new Blob([exportWorkspace()], { type: "application/json" });
@@ -112,6 +116,56 @@ export default function SettingsPage() {
           <p className="mt-1 text-[10px] text-ink-faint">
             Key is stored only in your browser. Get one at openrouter.ai/keys.
           </p>
+        </Section>
+
+        <Section icon={<Brain size={15} />} title="AI Memory">
+          <p className="mb-2 text-[12px] text-ink-faint">
+            Facts the assistant always remembers (injected into every AI answer).
+          </p>
+          <div className="mb-2 space-y-1.5">
+            {memories.map((m) => (
+              <div
+                key={m.id}
+                className="flex items-center gap-2 rounded-lg border border-canvas-border bg-canvas-panel px-3 py-1.5 text-[12px] text-ink-muted"
+              >
+                <span className="flex-1">{m.text}</span>
+                <button
+                  onClick={() => removeMemory(m.id)}
+                  className="text-ink-faint hover:text-danger"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+            {memories.length === 0 && (
+              <p className="text-[12px] text-ink-faint">No memories yet.</p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={memInput}
+              onChange={(e) => setMemInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && memInput.trim()) {
+                  addMemory(memInput);
+                  setMemInput("");
+                }
+              }}
+              placeholder="e.g. I'm building a brushless motor; prefer concise answers."
+              className="flex-1 rounded-lg border border-canvas-border bg-canvas-panel px-3 py-2 text-[13px] text-ink outline-none focus:border-accent-ring"
+            />
+            <button
+              onClick={() => {
+                if (memInput.trim()) {
+                  addMemory(memInput);
+                  setMemInput("");
+                }
+              }}
+              className="rounded-lg bg-accent px-3 py-2 text-[13px] font-medium text-accent-foreground transition hover:bg-accent-hover"
+            >
+              Add
+            </button>
+          </div>
         </Section>
 
         <Section icon={<Database size={15} />} title="Data">
