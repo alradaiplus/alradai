@@ -35,6 +35,8 @@ interface AppState {
   commandOpen: boolean;
   /** When set, the next node pick creates a connection from this id. */
   connectSourceId: string | null;
+  /** User's OpenRouter key — browser-only (never committed), enables real AI. */
+  aiKey: string | null;
 
   // ---- UI ----
   select: (id: string | null) => void;
@@ -42,6 +44,7 @@ interface AppState {
   toggleRightPanel: (open?: boolean) => void;
   toggleLeftRail: (open?: boolean) => void;
   setCommandOpen: (open: boolean) => void;
+  setAiKey: (key: string | null) => void;
 
   // ---- Boards ----
   addBoard: (title?: string) => Board;
@@ -149,6 +152,7 @@ export const useStore = create<AppState>()(
       leftRailOpen: true,
       commandOpen: false,
       connectSourceId: null,
+      aiKey: null,
 
       // ---- UI ----
       select: (id) =>
@@ -162,6 +166,7 @@ export const useStore = create<AppState>()(
       toggleLeftRail: (open) =>
         set((s) => ({ leftRailOpen: open ?? !s.leftRailOpen })),
       setCommandOpen: (open) => set({ commandOpen: open }),
+      setAiKey: (key) => set({ aiKey: key && key.trim() ? key.trim() : null }),
 
       // ---- Boards ----
       addBoard: (title) => {
@@ -411,6 +416,7 @@ export const useStore = create<AppState>()(
         currentBoardId: s.currentBoardId,
         nodes: s.nodes,
         edges: s.edges,
+        aiKey: s.aiKey,
       }),
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<AppState>;

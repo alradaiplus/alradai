@@ -3,35 +3,50 @@
 import { useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import type { ChatMessage } from "@/lib/types";
-import { Sparkles, ArrowUp, FileText } from "lucide-react";
+import { Sparkles, ArrowUp, FileText, KeyRound, Check, X } from "lucide-react";
 import { nanoid } from "nanoid";
-import { retrieve, citationsOf, fallbackAnswer } from "@/lib/ai/demo";
+import {
+  retrieve,
+  citationsOf,
+  fallbackAnswer,
+  contextBlock,
+} from "@/lib/ai/demo";
+import {
+  streamOpenRouterClient,
+  looksLikeOpenRouterKey,
+  type ClientChatMessage,
+} from "@/lib/ai/openrouter-client";
 
 /**
- * In a static export (e.g. GitHub Pages) there is no server route to call, so
- * the assistant answers entirely in the browser using the same grounded
- * keyword retrieval the server uses in demo mode.
+ * In a static export (e.g. GitHub Pages) there is no server route, so the
+ * assistant talks to OpenRouter directly from the browser using the user's own
+ * key (stored only in their browser). Without a key it falls back to grounded
+ * demo answers. On a server host it uses the secure /api/ai/chat route.
  */
 const STATIC_EXPORT = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
 
-/**
- * AI assistant grounded in the current board. Streams answers from the
- * /api/ai/chat route (OpenRouter → Claude) with context built from the user's
- * nodes, and surfaces citations that deep-link back to canvas nodes.
- */
+const SYSTEM = (ctx: string) =>
+  `You are Notes Canvas, the user's visual second brain. Answer using the context from their canvas below when relevant, and cite note titles inline. Be concise and helpful. If the context is insufficient, say so.\n\nCONTEXT:\n${ctx || "(no matching notes)"}`;
+
 export function AIChat() {
-  const nodes = useStore((s) => s.nodes);
+  const allNodes = useStore((s) => s.nodes);
+  const currentBoardId = useStore((s) => s.currentBoardId);
   const select = useStore((s) => s.select);
+  const aiKey = useStore((s) => s.aiKey);
+  const setAiKey = useStore((s) => s.setAiKey);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const nodes = allNodes.filter((n) => n.boardId === currentBoardId);
 
   const send = async (text: string) => {
     const q = text.trim();
     if (!q || busy) return;
     const userMsg: ChatMessage = { id: nanoid(), role: "user", content: q };
     const assistantId = nanoid();
+    const history = messages.slice(-6);
     setMessages((m) => [
       ...m,
       userMsg,
@@ -40,69 +55,84 @@ export function AIChat() {
     setInput("");
     setBusy(true);
 
-    // Static-export (GitHub Pages) path: no server, answer in the browser.
+    const ctx = nodes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      content: n.content,
+      tags: n.tags,
+    }));
+    const hits = retrieve(q, ctx);
+    const citations = citationsOf(hits);
+    const setAssistant = (content: string, withCites = true) =>
+      setMessages((m) =>
+        m.map((msg) =>
+          msg.id === assistantId
+            ? { ...msg, content, citations: withCites ? citations : undefined }
+            : msg
+        )
+      );
+    const scroll = () =>
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+
+    // ---- Static export path: talk to OpenRouter from the browser ----------
     if (STATIC_EXPORT) {
       try {
-        const ctx = nodes.map((n) => ({
-          id: n.id,
-          title: n.title,
-          content: n.content,
-          tags: n.tags,
-        }));
-        const hits = retrieve(q, ctx);
-        const citations = citationsOf(hits);
-        const full = fallbackAnswer(hits);
-        const words = full.split(/(\s+)/);
-        let acc = "";
-        for (const w of words) {
-          acc += w;
-          setMessages((m) =>
-            m.map((msg) =>
-              msg.id === assistantId ? { ...msg, content: acc, citations } : msg
-            )
-          );
-          scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-          await new Promise((r) => setTimeout(r, 12));
+        if (aiKey) {
+          const chat: ClientChatMessage[] = [
+            { role: "system", content: SYSTEM(contextBlock(hits)) },
+            ...history.map((h) => ({ role: h.role, content: h.content })),
+            { role: "user", content: q },
+          ];
+          let acc = "";
+          for await (const delta of streamOpenRouterClient({
+            apiKey: aiKey,
+            messages: chat,
+          })) {
+            acc += delta;
+            setAssistant(acc);
+            scroll();
+          }
+          if (!acc) setAssistant("(No response from the model.)");
+        } else {
+          // No key yet — grounded local answer, streamed word by word.
+          const full = fallbackAnswer(hits);
+          let acc = "";
+          for (const w of full.split(/(\s+)/)) {
+            acc += w;
+            setAssistant(acc);
+            scroll();
+            await new Promise((r) => setTimeout(r, 10));
+          }
         }
+      } catch (e) {
+        setAssistant(
+          `AI error: ${
+            e instanceof Error ? e.message : String(e)
+          }. Check your OpenRouter key has credit, then try again.`,
+          false
+        );
       } finally {
         setBusy(false);
       }
       return;
     }
 
+    // ---- Server path (Vercel / node host): secure /api/ai/chat ------------
     try {
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: q,
-          context: nodes.map((n) => ({
-            id: n.id,
-            title: n.title,
-            content: n.content,
-            tags: n.tags,
-          })),
-        }),
+        body: JSON.stringify({ message: q, context: ctx }),
       });
-
       if (!res.ok || !res.body) {
         const err = await res.json().catch(() => ({ error: "AI request failed" }));
-        setMessages((m) =>
-          m.map((msg) =>
-            msg.id === assistantId
-              ? { ...msg, content: err.error || "AI is not configured. Add OpenRouter keys to .env.local." }
-              : msg
-          )
-        );
+        setAssistant(err.error || "AI is not configured.", false);
         return;
       }
-
-      // Citations are returned via a response header (node ids).
       const citeHeader = res.headers.get("x-citations");
-      const citations = citeHeader
-        ? (JSON.parse(citeHeader) as { nodeId: string; title: string; score: number }[])
-        : undefined;
-
+      const cites = citeHeader
+        ? (JSON.parse(citeHeader) as ChatMessage["citations"])
+        : citations;
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
@@ -112,19 +142,13 @@ export function AIChat() {
         acc += decoder.decode(value, { stream: true });
         setMessages((m) =>
           m.map((msg) =>
-            msg.id === assistantId ? { ...msg, content: acc, citations } : msg
+            msg.id === assistantId ? { ...msg, content: acc, citations: cites } : msg
           )
         );
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+        scroll();
       }
     } catch {
-      setMessages((m) =>
-        m.map((msg) =>
-          msg.id === assistantId
-            ? { ...msg, content: "Something went wrong reaching the AI service." }
-            : msg
-        )
-      );
+      setAssistant("Something went wrong reaching the AI service.", false);
     } finally {
       setBusy(false);
     }
@@ -132,12 +156,14 @@ export function AIChat() {
 
   const suggestions = [
     "Summarize this board",
-    "What connects the motor notes?",
+    "What connects these notes?",
     "What am I missing?",
   ];
 
   return (
     <div className="flex h-full flex-col">
+      {STATIC_EXPORT && <KeyBar aiKey={aiKey} setAiKey={setAiKey} />}
+
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center pt-10 text-center">
@@ -146,7 +172,9 @@ export function AIChat() {
             </div>
             <p className="text-[14px] font-medium text-ink">AI that understands you</p>
             <p className="mt-1 max-w-[220px] text-[12px] text-ink-faint">
-              Ask anything about your canvas. Answers are grounded in your notes.
+              {aiKey || !STATIC_EXPORT
+                ? "Ask anything about your canvas. Answers are grounded in your notes."
+                : "Connect your OpenRouter key above for full AI, or ask now for grounded answers."}
             </p>
             <div className="mt-4 flex w-full flex-col gap-1.5">
               {suggestions.map((s) => (
@@ -218,6 +246,75 @@ export function AIChat() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Connect / manage the OpenRouter key (browser-only) for the static build. */
+function KeyBar({
+  aiKey,
+  setAiKey,
+}: {
+  aiKey: string | null;
+  setAiKey: (k: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState("");
+
+  if (aiKey && !editing) {
+    return (
+      <div className="flex items-center gap-2 border-b border-canvas-border bg-canvas-panel px-3 py-1.5 text-[11px] text-ink-muted">
+        <Check size={12} className="text-success" />
+        <span>OpenRouter connected</span>
+        <button
+          onClick={() => {
+            setEditing(true);
+            setVal("");
+          }}
+          className="ml-auto text-ink-faint hover:text-ink"
+        >
+          Change
+        </button>
+        <button
+          onClick={() => setAiKey(null)}
+          className="text-ink-faint hover:text-danger"
+          title="Disconnect"
+        >
+          <X size={13} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-b border-canvas-border bg-canvas-panel px-3 py-2">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-ink-muted">
+        <KeyRound size={12} /> Connect OpenRouter for full AI
+      </div>
+      <div className="flex items-center gap-1.5">
+        <input
+          type="password"
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          placeholder="sk-or-v1-…"
+          className="flex-1 rounded-lg border border-canvas-border bg-canvas-bg px-2 py-1.5 text-[12px] text-ink outline-none focus:border-accent-ring"
+        />
+        <button
+          onClick={() => {
+            if (looksLikeOpenRouterKey(val)) {
+              setAiKey(val);
+              setEditing(false);
+            }
+          }}
+          disabled={!looksLikeOpenRouterKey(val)}
+          className="rounded-lg bg-accent px-2.5 py-1.5 text-[12px] font-medium text-accent-foreground transition hover:bg-accent-hover disabled:opacity-40"
+        >
+          Save
+        </button>
+      </div>
+      <p className="mt-1 text-[10px] text-ink-faint">
+        Stored only in your browser. Get a key at openrouter.ai/keys.
+      </p>
     </div>
   );
 }
