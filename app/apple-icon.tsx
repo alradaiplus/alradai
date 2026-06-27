@@ -11,18 +11,17 @@ export default function AppleIcon() {
         style={{
           width: 180,
           height: 180,
-          background: '#0A0A0A',
+          background: '#EC4516',
           borderRadius: 40,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <svg width="120" height="120" viewBox="0 0 24 24" fill="none">
-          <rect x="2"   y="15" width="20" height="3"   rx="1.5" fill="#D4A843" />
-          <rect x="4"   y="10.5" width="16" height="3" rx="1.5" fill="#D4A843" opacity="0.7" />
-          <rect x="6.5" y="6"   width="11" height="3"  rx="1.5" fill="#D4A843" opacity="0.45" />
-          <circle cx="12" cy="2.5" r="2" fill="#D4A843" />
+        <svg width="104" height="104" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="7" width="16" height="2.4" rx="1.2" fill="#fff" />
+          <rect x="4" y="12" width="16" height="2.4" rx="1.2" fill="#fff" opacity="0.85" />
+          <rect x="4" y="17" width="10" height="2.4" rx="1.2" fill="#fff" opacity="0.7" />
         </svg>
       </div>
     ),

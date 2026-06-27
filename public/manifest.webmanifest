@@ -1,13 +1,13 @@
 {
-  "name": "PYB3DCP — اطبع مبناك",
-  "short_name": "PYB3DCP",
-  "description": "أول شركة يمنية متخصصة في طباعة الخرسانة ثلاثية الأبعاد",
+  "name": "Notes",
+  "short_name": "Notes",
+  "description": "A fast, clean notes app with secure cross-device sync.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0A0A0A",
-  "theme_color": "#0A0A0A",
-  "lang": "ar",
-  "dir": "rtl",
+  "background_color": "#F5F6F7",
+  "theme_color": "#EC4516",
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
   ]

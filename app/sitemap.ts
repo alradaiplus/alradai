@@ -1,42 +1,31 @@
 import type { MetadataRoute } from 'next';
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://pyb3dcp.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 /**
- * Generates a bilingual sitemap for AR (root) + EN (/en) versions.
+ * Minimal sitemap for the public entry points (AR root + EN). The notes app
+ * itself sits behind auth and is intentionally not listed.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
+  const alternates = {
+    languages: { ar: BASE_URL, en: `${BASE_URL}/en` },
+  };
 
-  const routes: MetadataRoute.Sitemap = [
-    // Arabic root (canonical)
+  return [
     {
       url: BASE_URL,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 1,
-      alternates: {
-        languages: {
-          ar: BASE_URL,
-          en: `${BASE_URL}/en`,
-        },
-      },
+      alternates,
     },
-    // English
     {
       url: `${BASE_URL}/en`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.9,
-      alternates: {
-        languages: {
-          ar: BASE_URL,
-          en: `${BASE_URL}/en`,
-        },
-      },
+      alternates,
     },
   ];
-
-  return routes;
 }
